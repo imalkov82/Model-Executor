@@ -4,7 +4,6 @@ import logging
 import multiprocessing
 import subprocess
 import os
-import sys
 import timeit
 import time
 import socket
@@ -13,7 +12,7 @@ def split_by_psize(plist, psize):
     start = 0
     arr = []
     logging.info('split working dir list by size {0}'.format(psize))
-    for i in xrange(psize,len(plist)+1,psize):
+    for i in range(psize,len(plist)+1,psize):
         if i >= len(plist):
             arr.append(plist[start:])
         else:
@@ -21,20 +20,20 @@ def split_by_psize(plist, psize):
         start = i
     return arr
 
-def runcmd(cmd):
-    sys.stdout.flush()
-    proc = os.popen(cmd)
-    s = ""
-    while True:
-        line = proc.readline()
-        if line != '':
-            print line.strip()
-            s += line
-            sys.stdout.flush()
-        else:
-            print "------------ completed -----------"
-            break
-    return s
+# def runcmd(cmd):
+#     sys.stdout.flush()
+#     proc = os.popen(cmd)
+#     s = ""
+#     while True:
+#         line = proc.readline()
+#         if line != '':
+#             print(line.strip())
+#             s += line
+#             sys.stdout.flush()
+#         else:
+#             print("------------ completed -----------")
+#             break
+#     return s
 
 def run_exeshcmd(arr3):
     mdpath,shcommand = arr3
@@ -67,6 +66,25 @@ def run_exeshcmd(arr3):
         s+= '\n status: ERROR! {0}\n '.format('\n'.join(err_ans))
     logging.info(s)
 
+def topo_input_stats(fpath):
+    pass
+
+def fault_input_stats(fpath):
+    pass
+
+def steps_stats(fpath):
+    pass
+
+def collect_stats(root_path):
+    s = ''
+    input_path = os.path.join(root_path,'input')
+    s += topo_input_stats(os.path.join(input_path, 'topo_parameters.txt'))
+    s += fault_input_stats(os.path.join(input_path, 'fault_parameters.txt'))
+    data_path =  os.path.join(root_path,'data')
+    for step in os.listdir(data_path):
+        s += '{0} stats: \n {1}'.format(step, steps_stats(os.path.join(data_path, step)))
+    logging.info(s)
+
 def rundirs(plist, logfile, cmnd, psize = 3):
     logging.basicConfig(filename=logfile,level=logging.DEBUG)
     logging.info('logger started')
@@ -77,8 +95,9 @@ def rundirs(plist, logfile, cmnd, psize = 3):
     logging.info('cmd = {0}'.format(cmnd))
     try:
         for arr3 in split_by_psize(sorted(plist), psize):
+            p_stats = multiprocessing.Pool(psize)
             p = multiprocessing.Pool(psize)
             p.map(run_exeshcmd, zip(arr3 , [cmnd] * len(arr3)))
-    except Exception, e:
-        logging.error('run fail' + str(e))
+    except Exception as e:
+        logging.error('run fail {0}'.format(e))
 

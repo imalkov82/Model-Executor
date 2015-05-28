@@ -22,7 +22,7 @@ def main(model_name):
     work_data = topo_data[topo_data[model_name] == 0]
     work_data['execution_directory'] = work_data['execution_directory'].apply(lambda x : x.replace('~', os.environ['HOME']))
     wrk_list = [p for i, p in work_data['execution_directory'].iteritems()]
-    log_name = 'log_{0}.txt'.format(os.getpid())
+    log_name = 'log{1}_{0}.txt'.format(model_name, os.getpid())
     log_path = os.path.join(main_dir,log_name)
     print('log: {0}'.format(log_path))
     runcmd.rundirs(wrk_list, log_path, cmnd = "./bin/{0}".format(model_name))
@@ -31,6 +31,13 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     #set rules
     parser.add_argument( "-m", dest="model", help="model for execution", default= '')
+    parser.add_argument( "-s", action="store_true", dest="stats", help="collect statistics on model", default= False)
+    # parser.add_argument( "-l", dest="bin_path_arg", help="source directory of binary files", default= '')
+    # parser.add_argument( "-g", action="store_true", dest="gen_env", help="generate environment flag", default=False)
+    # parser.add_argument( "-c", action="store_true", dest="cyn_flag", help="generate 3D geomery (default is 2D)", default=False)
+    # parser.add_argument( "-p", action="store_true", dest="disp_path", help="display path only (no calculation)", default=False)
+    # parser.add_argument( "-w", action="store_true", dest="update_csv", help="update csv file after execution", default=False)
+
     kvargs = parser.parse_args()
 
     main(kvargs.model)
