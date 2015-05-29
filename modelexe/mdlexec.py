@@ -1,9 +1,12 @@
 __author__ = 'imalkov'
 
-import runcmd
 import os
-import pandas as pnd
 from argparse import ArgumentParser
+
+import pandas as pnd
+
+from modelexe import runcmd
+
 
 #
 # node2_dir =  os.path.join(main_dir, 'NODE02')

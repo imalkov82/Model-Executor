@@ -1,7 +1,5 @@
 __author__ = 'imalkov'
 
-from inputgroup.toporule import TopoInput
-from inputgroup.faultrule import FaultInput
 
 class ModelEnv:
     pass

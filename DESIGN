@@ -1,0 +1,18 @@
+Application:
+application has 3 components:
+
+ENV SETUP:
+1. folders creation
+2. creation of data files
+
+EXECUTION:
+1. Pecube model:
+    (a) Test,
+    (b) Pecube
+    (c) Vtk
+2. Cascade model (not implemented)
+ANALISYS:
+4. Pecube model csv files (after manual creation):
+    (a) age evelation profile
+    (b) temperature profile
+

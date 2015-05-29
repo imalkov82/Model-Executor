@@ -7,8 +7,10 @@ import os
 import timeit
 import time
 import socket
-from inputgroup.toporule import TopoInput
+
+from modeltools.inputgroup.toporule import TopoInput
 from inputgroup.faultrule import FaultInput
+
 
 def chunks(l, n):
     for i in range(0, len(l), n):
