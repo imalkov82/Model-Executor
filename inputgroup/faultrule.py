@@ -27,7 +27,6 @@ class Fault:
         s_start = g_end + 1
         s_end = s_start + int(fault_str[g_end])
         self._time_steps = fault_str[s_start: s_end]
-
     @property
     def geometry(self):
         return self._geometry
