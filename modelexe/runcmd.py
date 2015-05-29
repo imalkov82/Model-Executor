@@ -8,8 +8,8 @@ import timeit
 import time
 import socket
 
-from modeltools.inputgroup.toporule import TopoInput
-from inputgroup.faultrule import FaultInput
+from modeltools.modelinput.toporule import TopoInput
+from modeltools.modelinput.faultrule import FaultInput
 
 
 def chunks(l, n):
@@ -32,16 +32,13 @@ def chunks(l, n):
 #     return s
 
 def run_exeshcmd(arr3):
-    print('run_exeshcmd --->')
     mdpath,shcommand = arr3
     print(mdpath)
     err_ans = []
     out_ans = []
     pdir = os.getcwd()
     os.chdir(mdpath)
-
     s = '\nexecute path: {0}'.format(mdpath)
-
     start_time = timeit.default_timer()
 # code you want to evaluate
     p = subprocess.Popen(shcommand, stdin=subprocess.PIPE,stderr = subprocess.PIPE,stdout = subprocess.PIPE)
@@ -63,8 +60,8 @@ def run_exeshcmd(arr3):
         s+= "\n status: SUCCESS!"
     else:
         s+= '\n status: ERROR! {0}\n '.format('\n'.join(err_ans))
-    logging.info(s)
-    print('<--- run_exeshcmd')
+    return (mdpath, s)
+
 
 
 def topo_input_stats(fpath):

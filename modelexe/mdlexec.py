@@ -2,12 +2,113 @@ __author__ = 'imalkov'
 
 import os
 from argparse import ArgumentParser
-
 import pandas as pnd
-
 from modelexe import runcmd
+import multiprocessing
 
 
+################################################
+class ModelExecutor:
+    model_state_dict = {'INIT': 0,
+                        'PEC_PROPS': 1,
+                        'BY_TASKS': 2,
+                        'POOL_EXE': 3,
+                        'EXEC_COMPLETE': 4,
+                        'APP_COMPLETE': 5}
+
+    def __init__(self, model, peconf, max_psize, dry_run):
+        self._peconf = peconf
+        self._dry_run = dry_run
+        self._wrk_list = []
+        self._model = model
+        self._cmd = './bin/{0}'.format(model)
+        self._max_psize = max_psize
+        self._observers = []
+        self._state = ModelExecutor.model_state_dict['INIT']
+
+    @property
+    def peconf(self):
+        return self._peconf
+    @property
+    def dry_run(self):
+        return self._dry_run
+    @property
+    def wrk_list(self):
+        return self.wrk_list
+    @property
+    def command(self):
+        return self._cmd
+    def model(self):
+        return self._model
+    @property
+    def max_pool_size(self):
+        return self._max_psize
+    @property
+    def bytask_list(self):
+        return self._bytask_list
+
+    def attach(self, observer):
+        self._observers.append(observer)
+
+    def _update_observers(self):
+        for observer in self._observers:
+            observer()
+
+    def _get_wrk_list(self):
+        self._state = ModelExecutor.model_state_dict['PEC_PROPS']
+        topo_data = pnd.read_csv(self._peconf, names=['execution_directory', 'col_num', 'row_num',
+                                                      'step0', 'step1', 'step2', 'env', 'Test', 'Pecube', 'Vtk'],
+                                 usecols=['execution_directory', self._model])
+        work_data = topo_data[topo_data[self._model] == 0]
+        work_data['execution_directory'] = work_data['execution_directory'].apply(lambda x: x.replace('~', os.environ['HOME']))
+        self._wrk_list = [p for i, p in work_data['execution_directory'].iteritems()]
+        return
+
+    def _run_single_cmd(self):
+        self._state = ModelExecutor.model_state_dict['POOL_EXE']
+        self._psize = min(self._max_psize, len(self._sub_array))
+        self._update_observers()
+        p = multiprocessing.Pool(self._psize)
+        p.map(runcmd.run_exeshcmd, zip(self._sub_array, [self._cmd] * len(self._sub_array)))
+        self._state = ModelExecutor.model_state_dict['EXEC_COMPLETE']
+
+    def _runcmd(self):
+        try:
+            for arr3 in self._bytask_list:
+                print('execute dir list: \n\t{0}'.format('\n\t'.join(arr3)))
+                self._psize = min(self._max_psize, len(arr3))
+                if self._dry_run is False:
+                    # logging.info('generate pool size = {0}'.format(psize))
+                    p = multiprocessing.Pool(self._psize)
+                    p.map(runcmd.run_exeshcmd, zip(arr3, [self._cmd] * len(arr3)))
+        except Exception as e:
+            self._err_str = ('run fail with error: {0} , \n error type {1}'.format(e ,type(e)))
+        finally:
+            self._update_observers()
+
+    def _split_by_task(self):
+        self._state = ModelExecutor.model_state_dict['BY_TASKS']
+        self._bytask_list = list(runcmd.chunks(sorted(self._wrk_list), self._max_psize))
+        return
+
+    def _execute_state(self, func):
+        func(self)
+        self._update_observers()
+        return
+
+    def __call__(self):
+        self._update_observers()
+        self._execute_state(self._get_wrk_list)
+        self._execute_state(self._split_by_task)
+        if self._dry_run is False:
+            for sub_array in self._bytask_list:
+                self._sub_array = sub_array
+                self._execute_state(self._run_single_cmd)
+
+        self._state = ModelExecutor.model_state_dict['APP_COMPLETE']
+        self._update_observers()
+
+################################################
 #
 # node2_dir =  os.path.join(main_dir, 'NODE02')
 # node3_dir =  os.path.join(main_dir, 'NODE03')
