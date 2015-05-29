@@ -1,10 +1,13 @@
 __author__ = 'imalkov'
 
 import os
+import sys
+sys.path.append(os.getcwd())
 from argparse import ArgumentParser
 import pandas as pnd
-from modelexe import runcmd
+import modelexe.mdlruncmd as runcmd
 import multiprocessing
+from modeltools.modelpursue.peclogger import ExecLogger
 
 
 ################################################
@@ -16,12 +19,12 @@ class ModelExecutor:
                         'EXEC_COMPLETE': 4,
                         'APP_COMPLETE': 5}
 
-    def __init__(self, model, peconf, max_psize, dry_run):
+    def __init__(self, pec_model, peconf, max_psize, dry_run):
         self._peconf = peconf
         self._dry_run = dry_run
         self._wrk_list = []
-        self._model = model
-        self._cmd = './bin/{0}'.format(model)
+        self._pec_model = pec_model
+        self._cmd = './bin/{0}'.format(pec_model)
         self._max_psize = max_psize
         self._observers = []
         self._state = ModelExecutor.model_state_dict['INIT']
@@ -34,12 +37,13 @@ class ModelExecutor:
         return self._dry_run
     @property
     def wrk_list(self):
-        return self.wrk_list
+        return self._wrk_list
     @property
     def command(self):
         return self._cmd
-    def model(self):
-        return self._model
+    @property
+    def pec_model(self):
+        return self._pec_model
     @property
     def max_pool_size(self):
         return self._max_psize
@@ -58,10 +62,11 @@ class ModelExecutor:
         self._state = ModelExecutor.model_state_dict['PEC_PROPS']
         topo_data = pnd.read_csv(self._peconf, names=['execution_directory', 'col_num', 'row_num',
                                                       'step0', 'step1', 'step2', 'env', 'Test', 'Pecube', 'Vtk'],
-                                 usecols=['execution_directory', self._model])
-        work_data = topo_data[topo_data[self._model] == 0]
+                                 usecols=['execution_directory', self._pec_model])
+        work_data = topo_data[topo_data[self._pec_model] == 0]
         work_data['execution_directory'] = work_data['execution_directory'].apply(lambda x: x.replace('~', os.environ['HOME']))
         self._wrk_list = [p for i, p in work_data['execution_directory'].iteritems()]
+        self._update_observers()
         return
 
     def _run_single_cmd(self):
@@ -71,39 +76,36 @@ class ModelExecutor:
         p = multiprocessing.Pool(self._psize)
         p.map(runcmd.run_exeshcmd, zip(self._sub_array, [self._cmd] * len(self._sub_array)))
         self._state = ModelExecutor.model_state_dict['EXEC_COMPLETE']
+        self._update_observers()
 
-    def _runcmd(self):
-        try:
-            for arr3 in self._bytask_list:
-                print('execute dir list: \n\t{0}'.format('\n\t'.join(arr3)))
-                self._psize = min(self._max_psize, len(arr3))
-                if self._dry_run is False:
-                    # logging.info('generate pool size = {0}'.format(psize))
-                    p = multiprocessing.Pool(self._psize)
-                    p.map(runcmd.run_exeshcmd, zip(arr3, [self._cmd] * len(arr3)))
-        except Exception as e:
-            self._err_str = ('run fail with error: {0} , \n error type {1}'.format(e ,type(e)))
-        finally:
-            self._update_observers()
+    # def _runcmd(self):
+    #     try:
+    #         for arr3 in self._bytask_list:
+    #             print('execute dir list: \n\t{0}'.format('\n\t'.join(arr3)))
+    #             self._psize = min(self._max_psize, len(arr3))
+    #             if self._dry_run is False:
+    #                 # logging.info('generate pool size = {0}'.format(psize))
+    #                 p = multiprocessing.Pool(self._psize)
+    #                 p.map(runcmd.run_exeshcmd, zip(arr3, [self._cmd] * len(arr3)))
+    #     except Exception as e:
+    #         self._err_str = ('run fail with error: {0} , \n error type {1}'.format(e ,type(e)))
+    #     finally:
+    #         self._update_observers()
 
     def _split_by_task(self):
         self._state = ModelExecutor.model_state_dict['BY_TASKS']
         self._bytask_list = list(runcmd.chunks(sorted(self._wrk_list), self._max_psize))
-        return
-
-    def _execute_state(self, func):
-        func(self)
         self._update_observers()
         return
 
     def __call__(self):
         self._update_observers()
-        self._execute_state(self._get_wrk_list)
-        self._execute_state(self._split_by_task)
+        self._get_wrk_list()
+        self._split_by_task()
         if self._dry_run is False:
             for sub_array in self._bytask_list:
                 self._sub_array = sub_array
-                self._execute_state(self._run_single_cmd)
+                self._run_single_cmd()
 
         self._state = ModelExecutor.model_state_dict['APP_COMPLETE']
         self._update_observers()
@@ -134,7 +136,7 @@ def main(model_name, dry_run):
 if __name__ == '__main__':
     parser = ArgumentParser()
     #set rules
-    parser.add_argument( "-m", dest="model", help="model for execution", default= '')
+    parser.add_argument( "-m", dest="pec_model", help="model for execution", default= '')
     parser.add_argument( "-s", action="store_true", dest="stats", help="collect statistics on model", default= False)
     parser.add_argument( "-r", action="store_true", dest="dry_run", help="dry run", default= False)
     # parser.add_argument( "-l", dest="bin_path_arg", help="source directory of binary files", default= '')
@@ -145,4 +147,9 @@ if __name__ == '__main__':
 
     kvargs = parser.parse_args()
 
-    main(kvargs.model, kvargs.dry_run)
+    main_dir = '{0}/Dropbox/M.s/Research/DATA/SESSION_TREE/'.format(os.environ['HOME'])
+    modexec = ModelExecutor(kvargs.pec_model, '{0}/Dropbox/M.s/Research/DOCS/peconfig.csv'.format(os.environ['HOME']), POOL_SIZE, kvargs.dry_run)
+    exe_logger = ExecLogger(modexec)
+    modexec.attach(exe_logger)
+    modexec()
+    # main(kvargs.model, kvargs.dry_run)

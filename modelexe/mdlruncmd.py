@@ -33,7 +33,7 @@ def chunks(l, n):
 
 def run_exeshcmd(arr3):
     mdpath,shcommand = arr3
-    print(mdpath)
+    # print(mdpath)
     err_ans = []
     out_ans = []
     pdir = os.getcwd()

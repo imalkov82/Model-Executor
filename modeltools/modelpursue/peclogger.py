@@ -9,8 +9,10 @@ import time
 class ModelLogger:
     def __init__(self, driver):
         self._driver = driver
-        self._logger = logging.basicConfig(
-            filename='{0}/log_{1}.txt'.format(os.environ['HOME'], os.getpid()),level=logging.DEBUG)
+        log_name = '{0}/log_{1}.txt'.format(os.environ['HOME'], os.getpid())
+        print('ModelLogger - log file: {0}'.format(log_name))
+        logging.basicConfig(filename=log_name,level=logging.DEBUG)
+        self._logger = logging.getLogger('Model Logger')
 
 
 class EnvLogger(ModelLogger):
@@ -21,22 +23,22 @@ class EnvLogger(ModelLogger):
         pass
 
 class ExecLogger(ModelLogger):
+    model_state_dict = {
+        0: 'init_state',
+        1: 'pec_props_state',
+        2: 'by_tasks_state',
+        3: 'pool_exe_state',
+        4: 'exec_complete_state',
+        5: 'app_complete_state'}
 
     def __init__(self, driver):
-        super.__init__(driver)
-        self.model_state_dict = {
-            0: self.init_state,
-            1: self.pec_props_state,
-            2: self.by_tasks_state,
-            3: self.pool_exe_state,
-            4: self.exec_complete_state,
-            5: self.app_complete_state}
+        super().__init__(driver)
 
     def init_state(self):
         self._logger.info('Model Executor state: INIT ')
         s = ''
         s += '\n\tmax pool size = {0}'.format(self._driver.max_pool_size)
-        s += '\n\tmodel = {0}'.format(self._driver.model)
+        s += '\n\tmodel = {0}'.format(self._driver.pec_model)
         self._logger.info(s)
 
     def pec_props_state(self):
@@ -49,13 +51,13 @@ class ExecLogger(ModelLogger):
     def by_tasks_state(self):
         self._logger.info('Model Executor state: BY_TASKS')
         s = ''
-        s = '\n'.format(pprint.pformat(self._driver.bytask_list))
+        s = '\n{0}'.format(pprint.pformat(self._driver.bytask_list))
         self._logger.info(s)
 
     def pool_exe_state(self):
         self._logger.info('Model Executor state: POOL_EXE')
         s = ''
-        s = 'EXECUTING POOL:\n\t{0}'.format('\n\t'.join(self._driver.self._sub_array))
+        s = 'EXECUTING POOL:\n\t{0}'.format('\n\t'.join(self._driver._sub_array))
         s = '\nDATE_TIME: {0}'.format(time.strftime("%x"))
         self.exec_start_time = timeit.default_timer()
         self._logger.info(s)
@@ -75,7 +77,7 @@ class ExecLogger(ModelLogger):
         self._logger.info('^^^^^^^^^^^^ {0} EXECUTION COMPLETED ^^^^^^^^^^^^^^^^^ '.format(s))
 
     def __call__(self):
-        self.model_state_dict[self._driver._state](self)
+        getattr(self, ExecLogger.model_state_dict[self._driver._state])()
 
 class AnalysisLogger:
     def __init__(self, driver):
