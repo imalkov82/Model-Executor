@@ -12,10 +12,10 @@ class PecubeEnv(ModelEnv):
 class CascadeEnv(ModelEnv):
     pass
 
-f = FaultInput('/home/imalkov/Dropbox/M.s/Research/DATA/SESSION_TREE/NODE03/Session1A/input/fault_parameters.txt')
-flt = f.get_fault(2)
-print(flt.geometry)
-print(flt.steps)
+# f = FaultInput('/home/imalkov/Dropbox/M.s/Research/DATA/SESSION_TREE/NODE03/Session1A/input/fault_parameters.txt')
+# for flt in f.faults:
+#     print(flt.geometry)
+#     print(flt.steps)
 # t = TopoInput('/home/imalkov/Dropbox/M.s/Research/DATA/SESSION_TREE/NODE03/Session1A/input/topo_parameters.txt')
 
 # print(t.nx0)

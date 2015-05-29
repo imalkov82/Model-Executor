@@ -7,7 +7,8 @@ import os
 import timeit
 import time
 import socket
-import itertools
+from inputgroup.toporule import TopoInput
+from inputgroup.faultrule import FaultInput
 
 def chunks(l, n):
     for i in range(0, len(l), n):
@@ -63,13 +64,14 @@ def run_exeshcmd(arr3):
     logging.info(s)
     print('<--- run_exeshcmd')
 
+
 def topo_input_stats(fpath):
-    pass
+    t = TopoInput(fpath)
 
 def fault_input_stats(fpath):
-    pass
+    f = FaultInput(fpath)
 
-def steps_stats(fpath):
+def data_stats(fpath):
     pass
 
 def collect_stats(root_path):
@@ -79,7 +81,7 @@ def collect_stats(root_path):
     s += fault_input_stats(os.path.join(input_path, 'fault_parameters.txt'))
     data_path =  os.path.join(root_path,'data')
     for step in os.listdir(data_path):
-        s += '{0} stats: \n {1}'.format(step, steps_stats(os.path.join(data_path, step)))
+        s += '{0} stats: \n {1}'.format(step, data_stats(os.path.join(data_path, step)))
     logging.info(s)
 
 def rundirs(plist, logfile, cmnd, dry_run = False, max_psize = 3):
