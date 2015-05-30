@@ -20,14 +20,15 @@ class ModelExecutor:
                         'EXEC_COMPLETE': 4,
                         'APP_COMPLETE': 5}
 
-    def __init__(self, pec_model, peconf, max_psize, dry_run):
+    def __init__(self, pec_model, peconf, max_psize, dry_run, single_index):
         self._peconf = peconf
         self._dry_run = dry_run
         self._wrk_list = []
         self._pec_model = pec_model
         self._cmd = './bin/{0}'.format(pec_model)
-        self._max_psize = max_psize
+        self._max_psize = int(max_psize)
         self._observers = []
+        self._single_index = int(single_index)
         self._state = ModelExecutor.model_state_dict['INIT']
 
     @property
@@ -64,7 +65,10 @@ class ModelExecutor:
         topo_data = pnd.read_csv(self._peconf, names=['execution_directory', 'col_num', 'row_num',
                                                       'step0', 'step1', 'step2', 'env', 'Test', 'Pecube', 'Vtk'],
                                  usecols=['execution_directory', self._pec_model])
-        work_data = topo_data[topo_data[self._pec_model] == 0]
+        if self._single_index >= 0:
+            work_data = topo_data.iloc[[self._single_index]]
+        else:
+            work_data = topo_data[topo_data[self._pec_model] == 0]
         work_data['execution_directory'] = work_data['execution_directory'].apply(lambda x: x.replace('~', os.environ['HOME']))
         self._wrk_list = [p for i, p in work_data['execution_directory'].iteritems()]
         self._update_observers()
@@ -120,8 +124,6 @@ class ModelExecutor:
 # l2 = [os.path.join(node2_dir,d) for d in ['Session1D','Session1E','Session1F','Session2A','Session2B','Session2C']]
 # runcmd.rundirs(l1+l2, os.path.join(main_dir,'log{0}.txt'.format(os.getpid())), cmnd = "./bin/Pecube")
 
-POOL_SIZE = 3
-
 def main(model_name, dry_run):
     main_dir = '{0}/Dropbox/M.s/Research/DATA/SESSION_TREE/'.format(os.environ['HOME'])
     topo_data = pnd.read_csv('{0}/Dropbox/M.s/Research/DOCS/peconfig.csv'.format(os.environ['HOME']), names = ['execution_directory','col_num','row_num','step0','step1','step2', 'env', 'Test', 'Pecube', 'Vtk'])
@@ -132,26 +134,23 @@ def main(model_name, dry_run):
     log_name = 'log{1}_{0}.txt'.format(model_name, os.getpid())
     log_path = os.path.join(main_dir,log_name)
     print('log: {0}'.format(log_path))
-    runcmd.rundirs(wrk_list, log_path, cmnd = "./bin/{0}".format(model_name),dry_run=dry_run,  max_psize=min(len(wrk_list),POOL_SIZE))
+    runcmd.rundirs(wrk_list, log_path, cmnd = "./bin/{0}".format(model_name),dry_run=dry_run,  max_psize=min(len(wrk_list),3))
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    #set rules
+    #set cmd rules
     parser.add_argument( "-m", dest="pec_model", help="model for execution", default= '')
     parser.add_argument( "-s", action="store_true", dest="stats", help="collect statistics on model", default= False)
     parser.add_argument( "-r", action="store_true", dest="dry_run", help="dry run", default= False)
-    # parser.add_argument( "-l", dest="bin_path_arg", help="source directory of binary files", default= '')
-    # parser.add_argument( "-g", action="store_true", dest="gen_env", help="generate environment flag", default=False)
-    # parser.add_argument( "-c", action="store_true", dest="cyn_flag", help="generate 3D geomery (default is 2D)", default=False)
-    # parser.add_argument( "-p", action="store_true", dest="disp_path", help="display path only (no calculation)", default=False)
-    # parser.add_argument( "-w", action="store_true", dest="update_csv", help="update csv file after execution", default=False)
+    parser.add_argument( "-i", dest="single_index", help="single file index", default= -1)
     kvargs = parser.parse_args()
-
+    #set config rules
     config = ConfigParser()
-    # config.read('{0}/Documents/pycharm_workspace/Model-Executor/model.conf'.format(os.environ['HOME']))
     config.read('./model.conf')
-    # print(config.sections())
-    modexec = ModelExecutor(kvargs.pec_model, config['Default']['peconfig'].replace('~', os.environ['HOME']), POOL_SIZE, kvargs.dry_run)
+
+    #execute
+    modexec = ModelExecutor(kvargs.pec_model, config['Default']['peconfig'].replace('~', os.environ['HOME']),
+                            config['Execute']['max_pool_size'], kvargs.dry_run, kvargs.single_index)
     exe_logger = ExecLogger(modexec)
     modexec.attach(exe_logger)
     modexec()
