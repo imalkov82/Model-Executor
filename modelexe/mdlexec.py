@@ -4,6 +4,7 @@ import os
 import sys
 sys.path.append(os.getcwd())
 from argparse import ArgumentParser
+from configparser import ConfigParser
 import pandas as pnd
 import modelexe.mdlruncmd as runcmd
 import multiprocessing
@@ -144,12 +145,14 @@ if __name__ == '__main__':
     # parser.add_argument( "-c", action="store_true", dest="cyn_flag", help="generate 3D geomery (default is 2D)", default=False)
     # parser.add_argument( "-p", action="store_true", dest="disp_path", help="display path only (no calculation)", default=False)
     # parser.add_argument( "-w", action="store_true", dest="update_csv", help="update csv file after execution", default=False)
-
     kvargs = parser.parse_args()
 
-    main_dir = '{0}/Dropbox/M.s/Research/DATA/SESSION_TREE/'.format(os.environ['HOME'])
-    modexec = ModelExecutor(kvargs.pec_model, '{0}/Dropbox/M.s/Research/DOCS/peconfig.csv'.format(os.environ['HOME']), POOL_SIZE, kvargs.dry_run)
+    config = ConfigParser()
+    config.read('{0}/Documents/pycharm_workspace/Model-Executor/model.conf'.format(os.environ['HOME']))
+    modexec = ModelExecutor(kvargs.pec_model, config['Default']['peconfig'].replace('~', os.environ['HOME']), POOL_SIZE, kvargs.dry_run)
     exe_logger = ExecLogger(modexec)
     modexec.attach(exe_logger)
     modexec()
+
+
     # main(kvargs.model, kvargs.dry_run)

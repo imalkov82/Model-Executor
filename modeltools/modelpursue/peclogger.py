@@ -57,8 +57,8 @@ class ExecLogger(ModelLogger):
     def pool_exe_state(self):
         self._logger.info('Model Executor state: POOL_EXE')
         s = ''
-        s = 'EXECUTING POOL:\n\t{0}'.format('\n\t'.join(self._driver._sub_array))
-        s = '\nDATE_TIME: {0}'.format(time.strftime("%x"))
+        s += 'EXECUTING POOL:\n\t{0}'.format('\n\t'.join(self._driver._sub_array))
+        s += '\n\tDATE_TIME: {0}'.format(time.strftime("%x"))
         self.exec_start_time = timeit.default_timer()
         self._logger.info(s)
 
