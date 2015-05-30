@@ -128,7 +128,7 @@ def temperature_finder(root_dir):
     name = 'Temperature'
     for dirpath, dirname, filename in os.walk(root_dir):
         for f in filename:
-            if f.find(name) != -1:
+            if f.find(name) != -1 and os.path.split(dirpath)[1] == 'csv':
                 arr.append((dirpath, f))
     return collect_to_dict(arr)
 
@@ -168,15 +168,15 @@ def plot_temperature(src_path, dst_path, mean_flag):
                 pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
             else:
                 pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
+            plt.savefig(pic_name)
 
-            # plt.savefig(pic_name)
-            with open(os.path.join(os.getcwd(), 'geo_mean.txt'), 'a+') as f:
-                if mean_flag is True:
-                    riv_type = False
-                    if k.find('riv') != -1:
-                        riv_type = True
-                    tl = ['{0}={1}'.format(tt,vv) for tt, vv in zip(leg_list, gen_geoth_mean(fs, v, riv_type))]
-                    f.write('{0}: {1}\n'.format(os.path.split(pic_name)[1],','.join(list(reversed(tl)))))
+            if mean_flag is True:
+                with open(os.path.join(os.getcwd(), 'geo_mean.txt'), 'a+') as f:
+                        riv_type = False
+                        if k.find('riv') != -1:
+                            riv_type = True
+                        tl = ['{0}={1}'.format(tt,vv) for tt, vv in zip(leg_list, gen_geoth_mean(fs, v, riv_type))]
+                        f.write('{0}: {1}\n'.format(os.path.split(pic_name)[1],','.join(list(reversed(tl)))))
 
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(k, e))
