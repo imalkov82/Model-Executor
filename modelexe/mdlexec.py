@@ -62,9 +62,10 @@ class ModelExecutor:
 
     def _get_wrk_list(self):
         self._state = ModelExecutor.model_state_dict['PEC_PROPS']
-        topo_data = pnd.read_csv(self._peconf, names=['execution_directory', 'col_num', 'row_num',
-                                                      'step0', 'step1', 'step2', 'env', 'Test', 'Pecube', 'Vtk'],
-                                 usecols=['execution_directory', self._pec_model])
+        topo_data = pnd.read_csv(self._peconf, header=0, usecols=['execution_directory', self._pec_model])
+        # topo_data = pnd.read_csv(self._peconf, names=['execution_directory', 'col_num', 'row_num',
+        #                                               'step0', 'step1', 'step2', 'env', 'Test', 'Pecube', 'Vtk'],
+        #                          usecols=['execution_directory', self._pec_model])
         if self._single_index >= 0:
             work_data = topo_data.iloc[[self._single_index]]
         else:

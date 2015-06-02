@@ -1,6 +1,7 @@
 __author__ = 'imalkov'
 
 import os
+import numpy
 
 from modeltools.modelinput.pecutils import prepare_to_parse
 
@@ -55,6 +56,10 @@ class TopoInput:
         return self._const_part[3].split(' ')[1]
     @property
     @eval_prop
+    def skip(self):
+        return self._const_part[4]
+    @property
+    @eval_prop
     def lon0(self):
         return self._const_part[5].split(' ')[0]
     @property
@@ -65,6 +70,10 @@ class TopoInput:
     @eval_prop
     def tau(self):
         return self._const_part[7]
+    @property
+    # @eval_prop
+    def duration(self):
+        return max([float(l[0]) for l in self.tectosteps])
     @property
     @eval_prop
     def tectosteps(self):
@@ -122,13 +131,10 @@ class TopoInput:
     @eval_prop
     def tt(self):
         return self._dyn_part[1].split(',')[4]
-
     @property
     @eval_prop
     def la(self):
         return self._dyn_part[1].split(',')[5]
-
-
     @property
     @eval_prop
     def pr(self):

@@ -69,7 +69,7 @@ class ExecLogger(ModelLogger):
         self._logger.info(s)
 
     def app_complete_state(self):
-        self._logger.info('Model Executor state: APP_COMPLETE')
+        # self._logger.info('Model Executor state: APP_COMPLETE')
         if self._driver.dry_run is True:
             s = 'DRY RUN'
         else:

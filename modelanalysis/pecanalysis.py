@@ -74,7 +74,7 @@ def plot_ea(frame1, filt_df, dst_path, uplift_rate):
     plt.yticks(txs, list(reversed(lebs)))
     plt.savefig(dst_path)
 
-
+# TODO: optimize using pecinputstats.csv
 def find_max_treadline(data_frame, opt_tread):
     pnd_ds = data_frame['ApatiteHeAge']
     ds = np.array(pnd_ds)
@@ -107,7 +107,7 @@ def plot_age_elevation(src_path, dst_path):
         try:
             plot_ea(frame1, df_res, pic_name, uplift_from_fime_name(ea))
         except Exception as e:
-            print('error in file={0}, error msg = {1}'.format(ea, e.message))
+            print('error in file={0}, error msg = {1}'.format(ea, e))
 
 ############### TEMPERATURE ###################################################
 def gen_geoth_mean(fs, col_name_arr, riv_type):
@@ -128,7 +128,7 @@ def temperature_finder(root_dir):
     name = 'Temperature'
     for dirpath, dirname, filename in os.walk(root_dir):
         for f in filename:
-            if f.find(name) != -1 and os.path.split(dirpath)[1] == 'csv':
+            if f.find(name) != -1:
                 arr.append((dirpath, f))
     return collect_to_dict(arr)
 
@@ -181,6 +181,7 @@ def plot_temperature(src_path, dst_path, mean_flag):
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(k, e))
 
+# TODO: refuctor to OO
 if __name__ == '__main__':
     parser = ArgumentParser()
     #set rules

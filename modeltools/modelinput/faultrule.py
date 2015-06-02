@@ -1,7 +1,7 @@
 __author__ = 'imalkov'
 
 from modeltools.modelinput.pecutils import prepare_to_parse
-
+import numpy
 
 class FaultInput:
     def __init__(self, fpath):
@@ -31,7 +31,6 @@ class FaultInput:
     @property
     def y2(self):
         return self._fault_coord.split(' ')[3]
-
     @property
     def faults(self):
         return self._arr
@@ -49,9 +48,18 @@ class Fault:
     @property
     def steps(self):
         return self._time_steps
-
-
-
+    @property
+    def angle(self):
+        pl = [p.replace(' ',',') for p in self._geometry]
+        mat = numpy.matrix(';'.join(pl))
+        p =  mat[:, 1] + mat[:, 0]
+        return numpy.rad2deg(numpy.arctan(p[0, 0]/p[1, 0]))
+    @property
+    def abs_velosity(self):
+        return [float(i.split(' ')[-1]) for i in self._time_steps]
+    @property
+    def duration(self):
+        return [float(i.split(' ')[0]) for i in self._time_steps]
 
 class FaultParser():
     def __call__(self, arr_location):
