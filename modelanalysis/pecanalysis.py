@@ -190,8 +190,8 @@ if __name__ == '__main__':
     parser.add_argument( "-e", action="store_true", dest="aeflag", help="age elevation plot", default=False)
     parser.add_argument( "-tp", action="store_true", dest="tflag", help="temperature plot", default=False)
     parser.add_argument( "-ta", action="store_true", dest="tmean", help="temperature mean", default=False)
-
     kvargs = parser.parse_args()
+
     if kvargs.aeflag is True:
         print("Age Elevation plot")
         plot_age_elevation(kvargs.soure_path, kvargs.dest_path)

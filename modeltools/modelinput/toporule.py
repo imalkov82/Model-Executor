@@ -29,122 +29,235 @@ class TopoInput:
             self._dyn_part = str_file[pivot:]
         else:
             raise IOError('no such file: {0}'.format(fpath))
-    #
-    #
-    # def __call__(self):
-    #     str_file = prepare_to_parse(self._fpath)
-    #     pivot = 9 + int(str_file[6])
-    #     ll = TopoParse.const_parse(str_file[:pivot]) + TopoParse.dyn_parse(str_file[pivot:])
-    #     ll = [el if isinstance(el, str) else ",".join(el) for el in ll]
-    #     return ",".join(ll)
 
     @property
     @eval_prop
     def nx0(self):
         return self._const_part[2].split(' ')[0]
+
     @property
     @eval_prop
     def ny0(self):
         return self._const_part[2].split(' ')[1]
+
     @property
     @eval_prop
     def dlon(self):
         return self._const_part[3].split(' ')[0]
+
     @property
     @eval_prop
     def dlat(self):
         return self._const_part[3].split(' ')[1]
+
     @property
     @eval_prop
     def skip(self):
         return self._const_part[4]
+
     @property
     @eval_prop
     def lon0(self):
         return self._const_part[5].split(' ')[0]
+
     @property
     @eval_prop
     def lat0(self):
         return self._const_part[5].split(' ')[1]
+
     @property
     @eval_prop
     def tau(self):
         return self._const_part[7]
+
     @property
     # @eval_prop
     def duration(self):
         return max([float(l[0]) for l in self.tectosteps])
+
     @property
     @eval_prop
     def tectosteps(self):
         return self._const_part[- (int(self._const_part[6]) + 1):]
+
     @property
     @eval_prop
     def f0(self):
         return self._dyn_part[0].split(' ')[0]
+
     @property
     @eval_prop
     def rc(self):
         s = self._dyn_part[0].split(' ')[1]
         return s.split(',')[0]
+
     @property
     @eval_prop
     def rm(self):
         return self._dyn_part[0].split(',')[1]
+
     @property
     @eval_prop
     def E(self):
         return self._dyn_part[0].split(',')[2]
+
     @property
     @eval_prop
     def n(self):
         return self._dyn_part[0].split(',')[3]
+
     @property
     @eval_prop
     def L(self):
         return self._dyn_part[0].split(',')[4]
+
     @property
     @eval_prop
     def nx(self):
         return self._dyn_part[0].split(',')[5]
+
     @property
     @eval_prop
     def ny(self):
         return self._dyn_part[0].split(',')[6]
+
     @property
     @eval_prop
     def zl(self):
         return self._dyn_part[1].split(',')[0]
+
     @property
     @eval_prop
     def nz(self):
         return self._dyn_part[1].split(',')[1]
+
     @property
     @eval_prop
     def k(self):
         return self._dyn_part[1].split(',')[2]
+
     @property
     @eval_prop
     def tb(self):
         return self._dyn_part[1].split(',')[3]
+
     @property
     @eval_prop
     def tt(self):
         return self._dyn_part[1].split(',')[4]
+
     @property
     @eval_prop
     def la(self):
         return self._dyn_part[1].split(',')[5]
+
     @property
     @eval_prop
     def pr(self):
         return self._dyn_part[1].split(',')[6]
+
+    #SETTERS
+    @nx0.setter
+    def nx0(self, val):
+        self._const_part[2].split(' ')[0] = val
+
+    @nx0.setter
+    def ny0(self, val):
+        self._const_part[2].split(' ')[1] = val
+
+    @dlon.setter
+    def dlon(self, val):
+        self._const_part[3].split(' ')[0] = val
+
+    @dlat.setter
+    def dlat(self, val):
+        self._const_part[3].split(' ')[1] = val
+
+    @skip.setter
+    def skip(self, val):
+        self._const_part[4] = val
+
+    @lon0.setter
+    def lon0(self, val):
+        self._const_part[5].split(' ')[0] = val
+
+    @lat0.setter
+    def lat0(self, val):
+        self._const_part[5].split(' ')[1] = val
+
+    @tau.setter
+    def tau(self, val):
+        self._const_part[7] = val
+
+    @duration.setter
+    def duration(self, val):
+        max([float(l[0]) for l in self.tectosteps])
+
+    @tectosteps.setter
+    def tectosteps(self, val):
+        self._const_part[- (int(self._const_part[6]) + 1):] = val
+
+    @f0.setter
+    def f0(self, val):
+        self._dyn_part[0].split(' ')[0] = val
+
+    @rc.setter
+    def rc(self, val):
+        #TODO
+        s = self._dyn_part[0].split(' ')[1]
+        s.split(',')[0]
+
+    @rm.setter
+    def rm(self, val):
+        self._dyn_part[0].split(',')[1] = val
+
+    @E.setter
+    def E(self, val):
+        self._dyn_part[0].split(',')[2] = val
+
+    @n.setter
+    def n(self, val):
+        self._dyn_part[0].split(',')[3] = val
+
+    @L.setter
+    def L(self, val):
+        self._dyn_part[0].split(',')[4] = val
+
+    @nx.setter
+    def nx(self, val):
+        self._dyn_part[0].split(',')[5] = val
+
+    @ny.setter
+    def ny(self, val):
+        self._dyn_part[0].split(',')[6] = val
+
+    @zl.setter
+    def zl(self, val):
+        self._dyn_part[1].split(',')[0] = val
+
+    @nz.setter
+    def nz(self, val):
+        self._dyn_part[1].split(',')[1] = val
+
+    @k.setter
+    def k(self, val):
+        self._dyn_part[1].split(',')[2] = val
+
+    @tb.setter
+    def tb(self, val):
+        self._dyn_part[1].split(',')[3] = val
+
+    @tt.setter
+    def tt(self, val):
+        self._dyn_part[1].split(',')[4] = val
+
+    @pr.setter
+    def la(self, val):
+        self._dyn_part[1].split(',')[5] = val
+
     @pr.setter
     def pr(self, val):
-        t = self._dyn_part[1].split(',')
-        t[6] = str(val)
-        self._dyn_part[1] = ','.join(t)
-
+        self._dyn_part[1].split(',')[6] = val
 
 class TopoParse:
     def __init__(self):
@@ -184,8 +297,3 @@ class TopoParse:
     @staticmethod
     def const_parse(ll):
         return TopoParse.tp_arange([a.split(' ') for a in ll])
-
-# topo_parser = TopoParse()
-# t = TopoInput('/home/imalkov/Dropbox/M.s/Research/DATA/SESSION_TREE/NODE03/Session1A/input/topo_parameters.txt')
-# # print(len(t().split(',')))
-# t.const_part
