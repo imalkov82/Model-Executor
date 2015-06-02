@@ -63,9 +63,6 @@ class ModelExecutor:
     def _get_wrk_list(self):
         self._state = ModelExecutor.model_state_dict['PEC_PROPS']
         topo_data = pnd.read_csv(self._peconf, header=0, usecols=['execution_directory', self._pec_model])
-        # topo_data = pnd.read_csv(self._peconf, names=['execution_directory', 'col_num', 'row_num',
-        #                                               'step0', 'step1', 'step2', 'env', 'Test', 'Pecube', 'Vtk'],
-        #                          usecols=['execution_directory', self._pec_model])
         if self._single_index >= 0:
             work_data = topo_data.iloc[[self._single_index]]
         else:
@@ -83,20 +80,6 @@ class ModelExecutor:
         p.map(runcmd.run_exeshcmd, zip(self._sub_array, [self._cmd] * len(self._sub_array)))
         self._state = ModelExecutor.model_state_dict['EXEC_COMPLETE']
         self._update_observers()
-
-    # def _runcmd(self):
-    #     try:
-    #         for arr3 in self._bytask_list:
-    #             print('execute dir list: \n\t{0}'.format('\n\t'.join(arr3)))
-    #             self._psize = min(self._max_psize, len(arr3))
-    #             if self._dry_run is False:
-    #                 # logging.info('generate pool size = {0}'.format(psize))
-    #                 p = multiprocessing.Pool(self._psize)
-    #                 p.map(runcmd.run_exeshcmd, zip(arr3, [self._cmd] * len(arr3)))
-    #     except Exception as e:
-    #         self._err_str = ('run fail with error: {0} , \n error type {1}'.format(e ,type(e)))
-    #     finally:
-    #         self._update_observers()
 
     def _split_by_task(self):
         self._state = ModelExecutor.model_state_dict['BY_TASKS']
@@ -117,13 +100,6 @@ class ModelExecutor:
         self._update_observers()
 
 ################################################
-#
-# node2_dir =  os.path.join(main_dir, 'NODE02')
-# node3_dir =  os.path.join(main_dir, 'NODE03')
-#
-# l1 = [os.path.join(node3_dir, el) for el in os.listdir(node3_dir)]
-# l2 = [os.path.join(node2_dir,d) for d in ['Session1D','Session1E','Session1F','Session2A','Session2B','Session2C']]
-# runcmd.rundirs(l1+l2, os.path.join(main_dir,'log{0}.txt'.format(os.getpid())), cmnd = "./bin/Pecube")
 
 def main(model_name, dry_run):
     main_dir = '{0}/Dropbox/M.s/Research/DATA/SESSION_TREE/'.format(os.environ['HOME'])
