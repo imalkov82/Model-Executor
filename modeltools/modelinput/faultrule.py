@@ -16,6 +16,8 @@ class FaultInput:
             gnum = int(fault_str[flt_str_indx])
             flt_str_indx = gnum + 1 + int(fault_str[gnum + 1]) + 1
 
+    def save_to_file(self, fpath = ''):
+        pass
     @property
     def num(self):
         return self._faults_num

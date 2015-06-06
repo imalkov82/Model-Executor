@@ -30,6 +30,11 @@ class TopoInput:
         else:
             raise IOError('no such file: {0}'.format(fpath))
 
+    def save_to_file(self, fpath = ''):
+        ff = self._const_part + self._dyn_part
+        with open(fpath, mode='w') as f:
+            f.write('\n'.join(ff))
+
     @property
     @eval_prop
     def nx0(self):
@@ -79,6 +84,18 @@ class TopoInput:
     @eval_prop
     def tectosteps(self):
         return self._const_part[- (int(self._const_part[6]) + 1):]
+
+    @property
+    def t0(self):
+        return self.tectosteps[0][0]
+
+    @property
+    def t1(self):
+        return self.tectosteps[1][0]
+
+    @property
+    def t2(self):
+        return self.tectosteps[2][0]
 
     @property
     @eval_prop
@@ -192,6 +209,24 @@ class TopoInput:
     @duration.setter
     def duration(self, val):
         max([float(l[0]) for l in self.tectosteps])
+
+    @t0.setter
+    def t0(self, val):
+        s = self.tectosteps
+        s[0][0] = val
+        self._const_part[- (int(self._const_part[6]) + 1):] = [' '.join(item) for item in s]
+
+    @t1.setter
+    def t1(self, val):
+        s = self.tectosteps
+        s[1][0] = val
+        self._const_part[- (int(self._const_part[6]) + 1):] = [' '.join(item) for item in s]
+
+    @t2.setter
+    def t2(self, val):
+        s = self.tectosteps
+        s[2][0] = val
+        self._const_part[- (int(self._const_part[6]) + 1):] = [' '.join(item) for item in s]
 
     @tectosteps.setter
     def tectosteps(self, val):

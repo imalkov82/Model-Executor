@@ -91,9 +91,8 @@ def gen_env(rootpath, binpath):
     except Exception as e:
         print("fail to create dir: msg {0}".format(e.message))
 
-###########################################################
+######################################################################################################################
 def main(bin_loc, genv_flag, cyn_flag, disp_path, esc_angle, cyn_angle, steps_num):
-
     # main_dir = '{0}/Dropbox/M.s/Research/DATA/SESSION_TREE/'.format(os.environ['HOME'])
     topo_data = pnd.read_csv('{0}/Dropbox/M.s/Research/DOCS/peconfig.csv'.format(os.environ['HOME']), header=0)
     wrk_data = topo_data[topo_data['env'] == 0]

@@ -100,18 +100,17 @@ class ModelExecutor:
         self._update_observers()
 
 ################################################
-
-def main(model_name, dry_run):
-    main_dir = '{0}/Dropbox/M.s/Research/DATA/SESSION_TREE/'.format(os.environ['HOME'])
-    topo_data = pnd.read_csv('{0}/Dropbox/M.s/Research/DOCS/peconfig.csv'.format(os.environ['HOME']), names = ['execution_directory','col_num','row_num','step0','step1','step2', 'env', 'Test', 'Pecube', 'Vtk'])
-
-    work_data = topo_data[topo_data[model_name] == 0]
-    work_data['execution_directory'] = work_data['execution_directory'].apply(lambda x : x.replace('~', os.environ['HOME']))
-    wrk_list = [p for i, p in work_data['execution_directory'].iteritems()]
-    log_name = 'log{1}_{0}.txt'.format(model_name, os.getpid())
-    log_path = os.path.join(main_dir,log_name)
-    print('log: {0}'.format(log_path))
-    runcmd.rundirs(wrk_list, log_path, cmnd = "./bin/{0}".format(model_name),dry_run=dry_run,  max_psize=min(len(wrk_list),3))
+# def main(model_name, dry_run):
+#     main_dir = '{0}/Dropbox/M.s/Research/DATA/SESSION_TREE/'.format(os.environ['HOME'])
+#     topo_data = pnd.read_csv('{0}/Dropbox/M.s/Research/DOCS/peconfig.csv'.format(os.environ['HOME']), names = ['execution_directory','col_num','row_num','step0','step1','step2', 'env', 'Test', 'Pecube', 'Vtk'])
+#
+#     work_data = topo_data[topo_data[model_name] == 0]
+#     work_data['execution_directory'] = work_data['execution_directory'].apply(lambda x : x.replace('~', os.environ['HOME']))
+#     wrk_list = [p for i, p in work_data['execution_directory'].iteritems()]
+#     log_name = 'log{1}_{0}.txt'.format(model_name, os.getpid())
+#     log_path = os.path.join(main_dir,log_name)
+#     print('log: {0}'.format(log_path))
+#     runcmd.rundirs(wrk_list, log_path, cmnd = "./bin/{0}".format(model_name),dry_run=dry_run,  max_psize=min(len(wrk_list),3))
 
 if __name__ == '__main__':
     parser = ArgumentParser()
