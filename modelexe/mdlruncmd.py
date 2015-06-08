@@ -7,6 +7,7 @@ import os
 import timeit
 import time
 import socket
+import sys
 
 from modeltools.modelinput.toporule import TopoInput
 from modeltools.modelinput.faultrule import FaultInput
@@ -16,20 +17,20 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
 
-# def runcmd(cmd):
-#     sys.stdout.flush()
-#     proc = os.popen(cmd)
-#     s = ""
-#     while True:
-#         line = proc.readline()
-#         if line != '':
-#             print(line.strip())
-#             s += line
-#             sys.stdout.flush()
-#         else:
-#             print("------------ completed -----------")
-#             break
-#     return s
+def runcmd(cmd):
+    sys.stdout.flush()
+    proc = os.popen(cmd)
+    s = ""
+    while True:
+        line = proc.readline()
+        if line != '':
+            print(line.strip())
+            s += line
+            sys.stdout.flush()
+        else:
+            print("------------ completed -----------")
+            break
+    return s
 
 def run_exeshcmd(arr3):
     mdpath,shcommand = arr3

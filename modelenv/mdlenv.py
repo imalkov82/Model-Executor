@@ -8,6 +8,7 @@ from modeltools.modelinput.faultrule import FaultInput
 from modeltools.modelinput.toporule import TopoInput
 from configparser import ConfigParser
 from modeltools.modelinput.datarule import StepInput
+from modelexe.mdlruncmd import runcmd
 
 class EnvNode:
     type_dict = {0: 'directory',
@@ -33,13 +34,13 @@ class EnvNode:
         return EnvNode.type_dict[self._type]
 
 class PecubeInputDir(EnvNode):
-    def __init__(self, path, topo_src, fault_src, config):
+    def __init__(self, path, topo_src, fault_src, topo_diff , fault_diff):
         self._root_path = path
         input_dir = os.path.join(path, 'input')
         if os.path.isdir(input_dir) is False:
             os.mkdir(input_dir)
         super().__init__(input_dir, 0)
-        self._fill_up_env(topo_src, fault_src, config)
+        self._fill_up_env(topo_src, fault_src, topo_diff , fault_diff)
 
     def _fill_up_env(self, topo_src, fault_scr, topo_diff , fault_diff):
         topoconf = ConfigParser()
@@ -85,14 +86,37 @@ class PecubeDataDir(EnvNode):
         self._fill_up_env(esc_ang, cyn_ang, grid_type, row_num, col_num, steps)
 
     def _fill_up_env(self, esc_ang, cyn_ang, grid_type, row_num, col_num, steps):
-        pass
-
+        for i, mhigt in enumerate(steps):
+            step_name = 'step{0}.txt'.format(i)
+            si = StepInput(step_name, esc_ang, cyn_ang, grid_type, row_num, col_num, mhigt)
+            si.save_to_file(self._path)
+            super().attach_child_node(EnvNode(os.path.join(self._path, step_name), 1))
 
 class PecubePEOutDir(EnvNode):
-    pass
+    def __init__(self, path, out_name):
+        self._root_path = path
+        data_dir = os.path.join(path, out_name)
+        if os.path.isdir(data_dir) is False:
+            os.mkdir(data_dir)
+        super().__init__(data_dir, 0)
 
 class PecubeBinDir(EnvNode):
-    pass
+    def __init__(self, path, bin_dir):
+        self._root_path = path
+        data_dir = os.path.join(path, 'bin')
+        if os.path.isdir(data_dir) is False:
+            os.mkdir(data_dir)
+        super().__init__(data_dir, 0)
+        self._fill_up_env(bin_dir)
+
+    def _fill_up_env(self, bin_dir):
+        #if bin local: make soft link : posible to download and install the application from repository
+        pdir = os.getcwd()
+        os.chdir(self._path)
+        for f in os.listdir(bin_dir):
+            runcmd('ln -s {0} {1}'.format(os.path.join(bin_dir, f), f))
+        os.chdir(pdir)
+        return
 
 class PecubeVtkDir(EnvNode):
     pass
@@ -124,8 +148,11 @@ class SessionEnv:
         self._env_root.attach_child_node(PecubeDataDir(self._env_root._path, self._esc_ang, self._cyn_ang,
                                                        self._grid_type,self._row_num, self._col_num ,self._steps))
         # VTK
+        self._env_root.attach_child_node(PecubeVtkDir(self._env_root._path))
         # BIN
+        self._env_root.attach_child_node(PecubeBinDir(self._env_root._path, self._bin_path))
         # OUTPUT
+        self._env_root.attach_child_node(PecubePEOutDir(self._env_root._path, 'peout'))
 
     def __call__(self, *args, **kwargs):
         pass
