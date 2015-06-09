@@ -17,30 +17,23 @@ class StepInput:
         self._high = max_high
 
     def save_to_file(self, save_path):
-        if self._grid_type == 0:
+        if self._grid_type == 1:
             print('generate topography with canyon')
             zs_func = StepInput.surfcyn_gen_factory(self._row_num,self._col_num, self._esc_ang, self._cyn_ang)
-        if self._grid_type == 1:
+        if self._grid_type == 0:
             print('generate topography')
             zs_func = StepInput.surfgen_factory(self._row_num, self._col_num, self._esc_ang)
 
         step = zs_func(self._high * numpy.sin(numpy.deg2rad(self._esc_ang)), StepInput.gen_mgsurf)
         print('write topography to file')
-        StepInput.write_topo_fname(step,os.path.join(save_path,self._step_name))
+        numpy.savetxt(save_path, step.flatten(),fmt='%d')
 
     @staticmethod
-    def gen_mgsurf(xsize,ysize,foo):
+    def gen_mgsurf(xsize , ysize, foo):
         x  = numpy.linspace(0, xsize, xsize)
         y  = numpy.linspace(0, ysize ,ysize)
         xi,yi = numpy.meshgrid(x,y)
         return foo(xi,yi)
-
-    @staticmethod
-    def write_topo_fname(data, ptxt):
-        try:
-            numpy.savetxt(ptxt, data.flatten(),fmt='%d')
-        except Exception as e:
-            print("Error in Print" + str(e))
 
     @staticmethod
     def surfgen_factory(mrow, mcol, esc_angle):

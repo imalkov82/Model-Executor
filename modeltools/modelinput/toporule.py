@@ -1,7 +1,6 @@
 __author__ = 'imalkov'
 
 import os
-import numpy
 
 from modeltools.modelinput.pecutils import prepare_to_parse
 
@@ -31,7 +30,7 @@ class TopoInput:
             raise IOError('no such file: {0}'.format(fpath))
 
     def save_to_file(self, fpath = ''):
-        ff = self._const_part + self._dyn_part
+        ff = self._const_part + self._dyn_part + ['Nil']
         with open(fpath, mode='w') as f:
             f.write('\n'.join(ff))
 
@@ -176,19 +175,26 @@ class TopoInput:
     #SETTERS
     @nx0.setter
     def nx0(self, val):
-        self._const_part[2].split(' ')[0] = val
-
-    @nx0.setter
+        s = self._const_part[2].split(' ')
+        s[0] = val
+        self._const_part[2] = ' '.join(s)
+    @ny0.setter
     def ny0(self, val):
-        self._const_part[2].split(' ')[1] = val
-
+        s = self._const_part[2].split(' ')
+        s[1] = val
+        self._const_part[2] = ' '.join(s)
     @dlon.setter
     def dlon(self, val):
-        self._const_part[3].split(' ')[0] = val
-
+        s = self._const_part[3].split(' ')
+        s[0] = val
+        self._const_part[3] = ' '.join(s)
     @dlat.setter
     def dlat(self, val):
-        self._const_part[3].split(' ')[1] = val
+        s = self._const_part[3].split(' ')
+        s[1] = val
+        self._const_part[3] = ' '.join(s)
+
+        # self._const_part[3].split(' ')[1] = val
 
     @skip.setter
     def skip(self, val):
@@ -196,11 +202,16 @@ class TopoInput:
 
     @lon0.setter
     def lon0(self, val):
-        self._const_part[5].split(' ')[0] = val
-
+        s = self._const_part[5].split(' ')
+        s[0] = val
+        self._const_part[5] = ' '.join(s)
+        # self._const_part[5].split(' ')[0] = val
     @lat0.setter
     def lat0(self, val):
-        self._const_part[5].split(' ')[1] = val
+        s = self._const_part[5].split(' ')
+        s[1] = val
+        self._const_part[5] = ' '.join(s)
+        # self._const_part[5].split(' ')[1] = val
 
     @tau.setter
     def tau(self, val):
@@ -234,7 +245,10 @@ class TopoInput:
 
     @f0.setter
     def f0(self, val):
-        self._dyn_part[0].split(' ')[0] = val
+        s = self._dyn_part[0].split(' ')
+        s[0] = val
+        self._dyn_part[0] = ' '.join(s)
+        # self._dyn_part[0].split(' ')[0] = val
 
     @rc.setter
     def rc(self, val):
@@ -308,7 +322,6 @@ class TopoParse:
         return ",".join(ll)
 
     def _is_valid_line_num(self, str_file):
-
         if len(str_file) <= (self._TP_FILE_LINE_NUM + 1):
             print("FALSE :", str_file)
             return False

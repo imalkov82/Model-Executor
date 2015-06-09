@@ -9,15 +9,18 @@ class FaultInput:
         self._faults_num = str_file[0]
         self._fault_coord = str_file[1]
         self._arr = []
-        fault_str = str_file[2:]
+        self._fault_str = str_file[2:]
         flt_str_indx = 0
         for i in range(int(self._faults_num)):
-            self._arr.append(Fault(fault_str[flt_str_indx:]))
-            gnum = int(fault_str[flt_str_indx])
-            flt_str_indx = gnum + 1 + int(fault_str[gnum + 1]) + 1
+            self._arr.append(Fault(self._fault_str[flt_str_indx:]))
+            gnum = int(self._fault_str[flt_str_indx])
+            flt_str_indx = gnum + 1 + int(self._fault_str[gnum + 1]) + 1
 
     def save_to_file(self, fpath = ''):
-        pass
+        ff = [self._faults_num] + [self._fault_coord] + self._fault_str
+        with open(fpath, mode='w') as f:
+            f.write('\n'.join(ff))
+
     @property
     def num(self):
         return self._faults_num
@@ -36,6 +39,25 @@ class FaultInput:
     @property
     def faults(self):
         return self._arr
+    #SETTERS
+    @num.setter
+    def num(self, val):
+        self._faults_num = val
+    @x1.setter
+    def x1(self, val):
+        s = self._fault_coord.split(' ')
+        s[0] = val
+        self._fault_coord = ' '.join(s)
+    @y1.setter
+    def y1(self, val):
+        s = self._fault_coord.split(' ')
+        s[1] = val
+        self._fault_coord = ' '.join(s)
+    @x2.setter
+    def x2(self, val):
+        s = self._fault_coord.split(' ')
+        s[2] = val
+        self._fault_coord = ' '.join(s)
 
 class Fault:
     def __init__(self, fault_str):
