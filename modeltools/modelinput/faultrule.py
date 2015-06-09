@@ -58,6 +58,11 @@ class FaultInput:
         s = self._fault_coord.split(' ')
         s[2] = val
         self._fault_coord = ' '.join(s)
+    @y2.setter
+    def y2(self, val):
+        s = self._fault_coord.split(' ')
+        s[3] = val
+        self._fault_coord = ' '.join(s)
 
 class Fault:
     def __init__(self, fault_str):

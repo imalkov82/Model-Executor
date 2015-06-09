@@ -1,12 +1,12 @@
 __author__ = 'imalkov'
 
-from modeltools.modelinput.faultrule import FaultInput
-from modeltools.modelinput.toporule import TopoInput
 import os
 import sys
-sys.path.append(os.getcwd())
 import pandas as pnd
 import numpy
+sys.path.append(os.getcwd())
+from modeltools.modelinput.faultrule import FaultInput
+from modeltools.modelinput.toporule import TopoInput
 from configparser import ConfigParser
 from argparse import ArgumentParser
 
@@ -75,8 +75,8 @@ class ModelInputStats:
             wrk_list = topo_data.execution_directory
 
         for path in [p.replace('~',os.environ['HOME']) for i, p in wrk_list.iteritems()]:
-            self._populate_topo_params()
-            self._populate_fault_params()
+            self._populate_topo_params(path)
+            self._populate_fault_params(path)
             # del tmp_dict
 
         frames = [stats_data, pnd.DataFrame(self._res_dict, columns=stats_data.columns)]

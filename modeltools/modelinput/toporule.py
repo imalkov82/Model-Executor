@@ -30,7 +30,7 @@ class TopoInput:
             raise IOError('no such file: {0}'.format(fpath))
 
     def save_to_file(self, fpath = ''):
-        ff = self._const_part + self._dyn_part + ['Nil']
+        ff = self._const_part + self._dyn_part
         with open(fpath, mode='w') as f:
             f.write('\n'.join(ff))
 
