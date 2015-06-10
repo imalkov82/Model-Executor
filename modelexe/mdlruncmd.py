@@ -60,7 +60,7 @@ def run_exeshcmd(arr3):
     if err_ans == []:
         s+= "\n status: SUCCESS!"
     else:
-        s+= '\n status: ERROR! {0}\n '.format('\n'.join(err_ans))
+        s+= '\n status: ERROR! {0}\n '.format(err_ans)
     return (mdpath, s)
 
 

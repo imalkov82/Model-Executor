@@ -249,61 +249,47 @@ class TopoInput:
         s[0] = val
         self._dyn_part[0] = ' '.join(s)
         # self._dyn_part[0].split(' ')[0] = val
-
     @rc.setter
     def rc(self, val):
         #TODO
         s = self._dyn_part[0].split(' ')[1]
         s.split(',')[0]
-
     @rm.setter
     def rm(self, val):
         self._dyn_part[0].split(',')[1] = val
-
     @E.setter
     def E(self, val):
         self._dyn_part[0].split(',')[2] = val
-
     @n.setter
     def n(self, val):
         self._dyn_part[0].split(',')[3] = val
-
     @L.setter
     def L(self, val):
         self._dyn_part[0].split(',')[4] = val
-
     @nx.setter
     def nx(self, val):
         self._dyn_part[0].split(',')[5] = val
-
     @ny.setter
     def ny(self, val):
         self._dyn_part[0].split(',')[6] = val
-
     @zl.setter
     def zl(self, val):
         self._dyn_part[1].split(',')[0] = val
-
     @nz.setter
     def nz(self, val):
         self._dyn_part[1].split(',')[1] = val
-
     @k.setter
     def k(self, val):
         self._dyn_part[1].split(',')[2] = val
-
     @tb.setter
     def tb(self, val):
         self._dyn_part[1].split(',')[3] = val
-
     @tt.setter
     def tt(self, val):
         self._dyn_part[1].split(',')[4] = val
-
     @pr.setter
     def la(self, val):
         self._dyn_part[1].split(',')[5] = val
-
     @pr.setter
     def pr(self, val):
         self._dyn_part[1].split(',')[6] = val
@@ -329,19 +315,16 @@ class TopoParse:
             print("FALSE :", str_file)
             return False
         return (len(str_file) - (int(str_file[6]) + 1)) == self._TP_FILE_LINE_NUM
-
     @staticmethod
     def tp_arange(ll):
         ll = [a[0] if len(a) == 1 else a for a in ll]
         # return map(lambda l: l.strip() if isinstance(l, str) else map(str.strip, l), ll)
         return [l.strip() if isinstance(l, str) else [str.strip(s) for s in l] for l in ll]
-
     @staticmethod
     def dyn_parse(ll):
         if (ll[0].find(' ')) != -1:
             ll[0] = ll[0].replace(' ', ',')
         return TopoParse.tp_arange([a.split(',') for a in ll])
-
     @staticmethod
     def const_parse(ll):
         return TopoParse.tp_arange([a.split(' ') for a in ll])
