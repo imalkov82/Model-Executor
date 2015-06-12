@@ -31,6 +31,8 @@ class TopoInput:
 
     def save_to_file(self, fpath = ''):
         ff = self._const_part + self._dyn_part
+        # TODO: fix Nil
+
         with open(fpath, mode='w') as f:
             f.write('\n'.join(ff))
 
@@ -172,6 +174,9 @@ class TopoInput:
     def pr(self):
         return self._dyn_part[1].split(',')[6]
 
+    @property
+    def agefnme(self):
+        return self._dyn_part[-1]
     #SETTERS
     @nx0.setter
     def nx0(self, val):
@@ -293,6 +298,10 @@ class TopoInput:
     @pr.setter
     def pr(self, val):
         self._dyn_part[1].split(',')[6] = val
+    @agefnme.setter
+    def agefnme(self, val):
+        self._dyn_part[-1] = val
+
 
 class TopoParse:
     def __init__(self):
