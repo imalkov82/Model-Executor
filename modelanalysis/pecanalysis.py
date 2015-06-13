@@ -31,7 +31,6 @@ def ea_finder(root_dir):
             arr.append(os.path.join(dirpath, name))
     return arr
 
-
 def collect_to_dict(tup_arr):
     loc_dict = {}
     for el, path in tup_arr:
@@ -97,7 +96,7 @@ def plot_age_elevation(src_path, dst_path):
     for ea in ea_finder(src_path):
         print(ea)
         cols = ['ApatiteHeAge','Points:2', 'arc_length']
-        frame1 = pnd.read_csv(ea, usecols = cols)
+        frame1 = pnd.read_csv(ea, header=0, usecols = cols)
         if ea.find('riv') != -1:
             pic_name = name_dst_file(ea, dst_path, '_riv_ea.png')
             df_res = df_ea_riv(frame1)
@@ -123,9 +122,11 @@ def gen_geoth_mean(fs, col_name_arr, riv_type):
     return res
 
 
-def temperature_finder(root_dir):
+def group_finder(root_dir):
+    return temperature_finder(root_dir,'group')
+
+def temperature_finder(root_dir, name='Temperature'):
     arr = []
-    name = 'Temperature'
     for dirpath, dirname, filename in os.walk(root_dir):
         for f in filename:
             if f.find(name) != -1:
@@ -144,7 +145,7 @@ def temperature_from_files(k, v , on_point_func = lambda x : x):
 def plot_temperature(src_path, dst_path, mean_flag):
     for k,v in temperature_finder(src_path).items():
         print(k)
-        max_high = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), usecols=['Points:2'])['Points:2'])
+        max_high = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header = 0, usecols=['Points:2'])['Points:2'])
         fs = temperature_from_files(k, v, on_point_func=lambda x:  x - max_high)
 
         f = plt.figure()
@@ -181,6 +182,23 @@ def plot_temperature(src_path, dst_path, mean_flag):
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(k, e))
 
+def convert_names(src_dir):
+    count = 1
+    for k,v in group_finder(src_dir).items():
+        # print('key={0}: val={1}'.format(k, ' '.join(sorted(v))))
+        for p in v:
+            convert_name = ''
+            fileName, _ = os.path.splitext(p)
+            with open(os.path.join(k,p),'r') as file:
+                l = file.readline()
+                if l.find('ApatiteHeAge') != -1:
+                    convert_name = 'Age-Elevation0.csv'
+                else:
+                    convert_name = 'Temperature{0}.csv'.format(int(fileName[-1])-1)
+            cmd = 'cp {0} {1}'.format(os.path.join(k,p),os.path.join(k,convert_name))
+            # print(cmd)
+            os.popen(cmd)
+
 # TODO: refuctor to OO
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -190,7 +208,13 @@ if __name__ == '__main__':
     parser.add_argument( "-e", action="store_true", dest="aeflag", help="age elevation plot", default=False)
     parser.add_argument( "-tp", action="store_true", dest="tflag", help="temperature plot", default=False)
     parser.add_argument( "-ta", action="store_true", dest="tmean", help="temperature mean", default=False)
+    parser.add_argument( "-c", action="store_true", dest="convert_name", help="converts group files to Temperature and Age-Elevation", default=False)
+
     kvargs = parser.parse_args()
+
+    if kvargs.convert_name is True:
+        print("converting files")
+        convert_names(kvargs.soure_path)
 
     if kvargs.aeflag is True:
         print("Age Elevation plot")
