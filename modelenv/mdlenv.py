@@ -33,7 +33,6 @@ def replace2env(f):
                 args_res.append(a.replace('~',os.environ['HOME']))
             else:
                 args_res.append(a)
-
         return f(*args_res, **kwargs)
     return wrap
 

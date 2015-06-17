@@ -6,7 +6,9 @@ import numpy as np
 import matplotlib.pylab as plt
 from argparse import ArgumentParser
 from functools import reduce
-
+import scipy
+import scipy.stats
+from scipy.stats import linregress
 
 def df_ea_riv(frame1):
     fd1 = frame1[frame1['Points:2'] < max(frame1['Points:2'])]
@@ -28,7 +30,7 @@ def ea_finder(root_dir):
     name = 'Age-Elevation0.csv'
     for dirpath, dirname, filename in os.walk(root_dir):
         if name in filename:
-            arr.append(os.path.join(dirpath, name))
+            arr.append((dirpath, name))
     return arr
 
 def collect_to_dict(tup_arr):
@@ -47,7 +49,7 @@ def name_dst_file(fname, dst_path, suf):
     pref = 'n{0}s{1}'.format(fname[node_loc:node_loc + 2], fname[s_loc:s_loc + 2])
     return '{0}{1}'.format(os.path.join(dst_path,pref), suf)
 
-def plot_ea(frame1, filt_df, dst_path, uplift_rate):
+def plot_ea(frame1, filt_df, dst_path, uplift_rate, riv_case):
     f = plt.figure()
     ax = filt_df.plot(x='ApatiteHeAge', y='Elevation', style='o-', ax=f.gca())
 
@@ -56,7 +58,7 @@ def plot_ea(frame1, filt_df, dst_path, uplift_rate):
     plt.ylabel('Elevation [Km]')
 
     #tread line
-    sup_age = find_max_treadline(filt_df, uplift_rate * np.sin(np.deg2rad(60)))
+    sup_age, slope, r_square = find_max_treadline(filt_df, uplift_rate * np.sin(np.deg2rad(60)), riv_case)
     x = filt_df[filt_df['ApatiteHeAge'] < sup_age]['ApatiteHeAge']
     y = filt_df[filt_df['ApatiteHeAge'] < sup_age]['Points:2']
     z = np.polyfit(x, y, 1)
@@ -74,37 +76,88 @@ def plot_ea(frame1, filt_df, dst_path, uplift_rate):
     plt.savefig(dst_path)
 
 # TODO: optimize using pecinputstats.csv
-def find_max_treadline(data_frame, opt_tread):
+def define_max_age(df1, tot_len, best_tread, riv_case, oldest_age):
+    print('best_tread={0}, tot_len={1}, oldest_age={2}'.format(best_tread, tot_len, oldest_age))
+
+    df1 = df1[~pnd.isnull(df1['slope'])]
+    df1 = df1[(df1.r_square < 1)]
+
+    df1 = df1.sort(['arr_len'], ascending = [1]).head(np.round(df1.shape[0] * 0.5))
+    df1['slope_diff'] = abs(df1['slope'] - best_tread)
+
+    if riv_case is True:
+        print('river case')
+        df1 = df1.sort(['arr_len'], ascending = [0]).head(np.round(df1.shape[0] * 0.5))
+        df1 = df1.sort(['r_square'], ascending = [0]).head(np.round(df1.shape[0] * 0.5))
+        riv_fd_by_slope_diff = df1
+        df2 = riv_fd_by_slope_diff[riv_fd_by_slope_diff.r_square == riv_fd_by_slope_diff.r_square.max()]
+    else:
+        print('escarpment case')
+        riv_fd_by_slope_diff = df1.sort(['slope_diff'], ascending = [1]).head(np.round(df1.shape[0] * 0.5))
+        # df1 = df1.sort(['slope_diff'], ascending = [1]).head(np.round(df1.shape[0] * 0.5))
+        # riv_fd_by_slope_diff = df1[df1.sup_age < np.ceil(0.85 * oldest_age)]
+        df2 = riv_fd_by_slope_diff[riv_fd_by_slope_diff.slope_diff == riv_fd_by_slope_diff.slope_diff.min()]
+    max_age = df2['sup_age'].max()
+    print(riv_fd_by_slope_diff)
+    print('max_age = {0}'.format(max_age))
+    s = df2[df2['sup_age'] == max_age]
+    return max_age , s['slope'], s['r_square']
+
+def find_max_treadline(data_frame, opt_tread, riv_case):
     pnd_ds = data_frame['ApatiteHeAge']
     ds = np.array(pnd_ds)
+
     max_age = 0
     min_tol = 1
+
+    slope_dict = {}
+    slope_dict['slope'] = []
+    slope_dict['r_square'] = []
+    slope_dict['arr_len'] = []
+    slope_dict['sup_age'] = []
+    slope_dict['max_height'] = []
+
     for sup_age in sorted(ds)[1:]:
         x = data_frame[data_frame['ApatiteHeAge'] < sup_age]['ApatiteHeAge']
         y = data_frame[data_frame['ApatiteHeAge'] < sup_age]['Points:2']
-        z = np.polyfit(x, y, 1)
-        if abs(opt_tread - z[0]) < min_tol:
-            min_tol = abs(opt_tread - z[0])
-            max_age = sup_age
-    return max_age
+        minh = data_frame['Points:2'].min()
+        slope, intercept, r_value, p_value, std_err = linregress(x, y)
 
-def uplift_from_fime_name(fname):
+        slope_dict['slope'].append(slope)
+        slope_dict['r_square'].append(r_value**2)
+        slope_dict['arr_len'].append(len(x))
+        slope_dict['sup_age'].append(sup_age)
+        slope_dict['max_height'].append(max(y)- minh)
+
+        # if abs(opt_tread - slope) < min_tol:
+        #     min_tol = abs(opt_tread - slope)
+        #     max_age = sup_age
+
+    pnd_data_frame = pnd.DataFrame(slope_dict, columns = ['slope', 'r_square', 'arr_len', 'sup_age', 'max_height'])
+    max_age, slope, r_square = define_max_age(pnd_data_frame, len(ds), opt_tread, riv_case, max(ds))
+    return max_age, slope, r_square
+
+def uplift_from_file_name(fname):
     s_loc = fname.find('csv') - 3
     return int(fname[s_loc :s_loc + 1]) * 0.1
 
 def plot_age_elevation(src_path, dst_path):
-    for ea in ea_finder(src_path):
+    for dirname, name in ea_finder(src_path):
+        ea = os.path.join(dirname, name)
+        root_dir = os.path.split(dirname)[0]
         print(ea)
         cols = ['ApatiteHeAge','Points:2', 'arc_length']
         frame1 = pnd.read_csv(ea, header=0, usecols = cols)
         if ea.find('riv') != -1:
+            riv_case = True
             pic_name = name_dst_file(ea, dst_path, '_riv_ea.png')
             df_res = df_ea_riv(frame1)
         else:
+            riv_case = False
             pic_name = name_dst_file(ea, dst_path, '_esc_ea.png')
             df_res = df_ea_esc(frame1)
         try:
-            plot_ea(frame1, df_res, pic_name, uplift_from_fime_name(ea))
+            plot_ea(frame1, df_res, pic_name, uplift_from_file_name(ea), riv_case)
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(ea, e))
 
@@ -113,11 +166,15 @@ def gen_geoth_mean(fs, col_name_arr, riv_type):
     res = []
     for tn in col_name_arr:
         if riv_type is False:
-            sm = 10
+            print('esc type')
+            sm = 5
         else:
+            print('riv type')
             s = fs[fs[tn] == min(fs[tn])]['arc_length']
             sm = s[s.index[:]].mean()
-        res_fs = fs[(fs['arc_length'] >= (sm - abs(sm * 0.1))) & (fs['arc_length'] < (sm + abs(sm * 0.1)))]
+        abs_sm___ = fs['arc_length'] >= (sm - abs(sm * 0.1))
+        sm_abs_sm___ = fs['arc_length'] < (sm + abs(sm * 0.1))
+        res_fs = fs[(abs_sm___) & (sm_abs_sm___)]
         res.append(-1 * res_fs[tn].mean())
     return res
 
@@ -145,8 +202,9 @@ def temperature_from_files(k, v , on_point_func = lambda x : x):
 def plot_temperature(src_path, dst_path, mean_flag):
     for k,v in temperature_finder(src_path).items():
         print(k)
-        max_high = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header = 0, usecols=['Points:2'])['Points:2'])
-        fs = temperature_from_files(k, v, on_point_func=lambda x:  x - max_high)
+        max_height = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header = 0, usecols=['Points:2'])['Points:2'])
+        print(max_height)
+        fs = temperature_from_files(k, v, on_point_func=lambda x:  x - max_height)
 
         f = plt.figure()
         ax = f.gca()
@@ -154,7 +212,8 @@ def plot_temperature(src_path, dst_path, mean_flag):
             for tn in v:
                 ax = fs.plot(x='arc_length', y=tn, ax=ax)
 
-            leg_list = list(reversed(["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i,t in enumerate(v)]))
+            t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]
+            leg_list = list(reversed(t_in_enumerate_v_))
             plt.title('BLOCK GEOTHREMA', fontsize = 12)
             plt.legend(leg_list , loc='best', fontsize=10)
             plt.xlabel('Length [km]')
@@ -176,9 +235,10 @@ def plot_temperature(src_path, dst_path, mean_flag):
                         riv_type = False
                         if k.find('riv') != -1:
                             riv_type = True
-                        tl = ['{0}={1}'.format(tt,vv) for tt, vv in zip(leg_list, gen_geoth_mean(fs, v, riv_type))]
-                        f.write('{0}: {1}\n'.format(os.path.split(pic_name)[1],','.join(list(reversed(tl)))))
-
+                        riv_type_ = ['{0}={1}'.format(tt, vv) for tt, vv in zip(leg_list, gen_geoth_mean(fs, v, riv_type))]
+                        join = ','.join(list(reversed(riv_type_)))
+                        n__format = '{0}: {1}\n'.format(os.path.split(pic_name)[1], join)
+                        f.write(n__format)
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(k, e))
 
@@ -188,13 +248,20 @@ def convert_names(src_dir):
         # print('key={0}: val={1}'.format(k, ' '.join(sorted(v))))
         for p in v:
             convert_name = ''
-            fileName, _ = os.path.splitext(p)
+            fileName, fileExtention = os.path.splitext(p)
+            if fileExtention.find('csv') == -1:
+                print('not csv file: {0}'.format(p))
             with open(os.path.join(k,p),'r') as file:
                 l = file.readline()
                 if l.find('ApatiteHeAge') != -1:
                     convert_name = 'Age-Elevation0.csv'
                 else:
-                    convert_name = 'Temperature{0}.csv'.format(int(fileName[-1])-1)
+                    try:
+                        convert_name = 'Temperature{0}.csv'.format(int(fileName[-1])-1)
+                    except ValueError as e:
+                        print(e)
+                        print('cannot convert file {0}'.format(fileName))
+
             cmd = 'cp {0} {1}'.format(os.path.join(k,p),os.path.join(k,convert_name))
             # print(cmd)
             os.popen(cmd)
@@ -215,7 +282,6 @@ if __name__ == '__main__':
     if kvargs.convert_name is True:
         print("converting files")
         convert_names(kvargs.soure_path)
-
     if kvargs.aeflag is True:
         print("Age Elevation plot")
         plot_age_elevation(kvargs.soure_path, kvargs.dest_path)
