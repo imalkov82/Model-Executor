@@ -11,7 +11,17 @@ EXECUTION:
     (b) Pecube
     (c) Vtk
 2. Cascade model (not implemented)
+
 ANALISYS:
 4. Pecube model csv files (after manual creation):
     (a) age elevation profile
     (b) temperature profile
+
+-------
+FLOW:
+-------
+1. create folders tree: with data (input, data, bin, peout, VTK)
+2. execute: Test, Pecube + Vtk
+3. analyse the results:
+    a. vtk module: create csv files
+    b. statistics and graphs
