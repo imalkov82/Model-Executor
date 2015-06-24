@@ -55,6 +55,7 @@ class EnvState:
                 raise NotImplemented('{0}: state not found', self.__name__)
             remaining_arr = remaining_arr[1:]
         return remaining_arr
+
 class TestState:
     @expose_mdlexe
     def process(self, remaining_arr, mdl_executor):
@@ -125,7 +126,8 @@ class GraphState:
 class StatisticsState:
     @expose_mdlexe
     def process(self, remaining_arr, mdl_executor):
-        l = [n.strip() for n in ast.literal_eval(mdl_executor.mdl_conf['sub_data'])]
+        data_ = ast.literal_eval(mdl_executor.mdl_conf['sub_data'])
+        l = [n.strip() for n in ast.literal_eval(data_)]
         data_path = mdl_executor.mdl_conf['data_root'].replace('~', os.environ['HOME'])
         for node_path in [os.path.join(data_path,n) for n in l]:
             cmd = 'python3 modelanalysis/pecanalysis.py -i {0} -o {0} -ta'.format(node_path)
@@ -180,6 +182,7 @@ if __name__ == '__main__':
 
     kvargs = parser.parse_args()
     sl = [n.strip() for n in ast.literal_eval(kvargs.states_list)] + ['end']
+    # sl = ['stat'] + ['end']
     config = ConfigParser()
     config.read('model.conf')
     DEBUG_FLAG = kvargs.debug
