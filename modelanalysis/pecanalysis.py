@@ -199,39 +199,40 @@ def temperature_from_files(k, v , on_point_func = lambda x : x):
         res.append(tmp_df)
     return reduce(lambda f1, f2: pnd.merge(f1, f2, on='arc_length', how='outer'), res)
 
-def plot_temperature(src_path, dst_path, mean_flag):
+def plot_temperature(src_path, dst_path, tp_flag, mean_flag):
     for k,v in temperature_finder(src_path).items():
         print(k)
         max_height = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header = 0, usecols=['Points:2'])['Points:2'])
         print(max_height)
         fs = temperature_from_files(k, v, on_point_func=lambda x:  x - max_height)
+        if k.find('riv') != -1:
+            pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
+        else:
+            pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
 
-        f = plt.figure()
-        ax = f.gca()
         try:
-            for tn in v:
-                ax = fs.plot(x='arc_length', y=tn, ax=ax)
+            if tp_flag is True:
+                f = plt.figure()
+                ax = f.gca()
 
-            t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]
-            leg_list = list(reversed(t_in_enumerate_v_))
-            plt.title('BLOCK GEOTHREMA', fontsize = 12)
-            plt.legend(leg_list , loc='best', fontsize=10)
-            plt.xlabel('Length [km]')
-            plt.ylabel('Depth [Km]')
+                for tn in v:
+                    ax = fs.plot(x='arc_length', y=tn, ax=ax)
 
-            mn = [min(fs[i]) for i in v]
-            txs = np.linspace(-np.ceil(- min(mn)), 0, np.ceil(- min(mn)) + 1)
-            lebs = [str(-i) for i in txs[:-1]] + ['0']
-            plt.yticks(txs, lebs)
+                t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]
+                leg_list = list(reversed(t_in_enumerate_v_))
+                plt.title('BLOCK GEOTHREMA', fontsize = 12)
+                plt.legend(leg_list , loc='best', fontsize=10)
+                plt.xlabel('Length [km]')
+                plt.ylabel('Depth [Km]')
 
-            if k.find('riv') != -1:
-                pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
-            else:
-                pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
-            plt.savefig(pic_name)
+                mn = [min(fs[i]) for i in v]
+                txs = np.linspace(-np.ceil(- min(mn)), 0, np.ceil(- min(mn)) + 1)
+                lebs = [str(-i) for i in txs[:-1]] + ['0']
+                plt.yticks(txs, lebs)
+                plt.savefig(pic_name)
 
             if mean_flag is True:
-                with open(os.path.join(os.getcwd(), 'geo_mean.txt'), 'a+') as f:
+                with open(os.path.join(dst_path, 'geo_mean.txt'), 'a+') as f:
                         riv_type = False
                         if k.find('riv') != -1:
                             riv_type = True
@@ -239,6 +240,7 @@ def plot_temperature(src_path, dst_path, mean_flag):
                         join = ','.join(list(reversed(riv_type_)))
                         n__format = '{0}: {1}\n'.format(os.path.split(pic_name)[1], join)
                         f.write(n__format)
+
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(k, e))
 
@@ -271,7 +273,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     #set rules
     parser.add_argument( "-i", dest="soure_path", help="source directory")
-    parser.add_argument( "-o", dest="dest_path", help="destination directory")
+    parser.add_argument( "-o", dest="dest_path", help="destination directory", default='')
     parser.add_argument( "-e", action="store_true", dest="aeflag", help="age elevation plot", default=False)
     parser.add_argument( "-tp", action="store_true", dest="tflag", help="temperature plot", default=False)
     parser.add_argument( "-ta", action="store_true", dest="tmean", help="temperature mean", default=False)
@@ -285,6 +287,6 @@ if __name__ == '__main__':
     if kvargs.aeflag is True:
         print("Age Elevation plot")
         plot_age_elevation(kvargs.soure_path, kvargs.dest_path)
-    if kvargs.tflag is True:
+    if kvargs.tflag is True or kvargs.tmean is True:
         print("Geotherma plot")
-        plot_temperature(kvargs.soure_path, kvargs.dest_path, kvargs.tmean)
+        plot_temperature(kvargs.soure_path, kvargs.dest_path, kvargs.tflag, kvargs.tmean)
