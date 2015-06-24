@@ -97,11 +97,12 @@ class CsvState:
 class GraphState:
     @expose_mdlexe
     def process(self, remaining_arr, mdl_executor):
-        l = [n.strip() for n in ast.literal_eval(mdl_executor.mdl_conf['sub_data'])]
+        data_ = ast.literal_eval(mdl_executor.mdl_conf['sub_data'])
+        l = [n.strip() for n in ast.literal_eval(data_)]
         data_path = mdl_executor.mdl_conf['data_root'].replace('~', os.environ['HOME'])
         age_pic =  mdl_executor.mdl_conf['age_pic'].replace('~', os.environ['HOME'])
         geotherm_pic =  mdl_executor.mdl_conf['geoterm_pic'].replace('~', os.environ['HOME'])
-        for node_path in [os.path.join(data_path,n) for n in l]:
+        for node_path in [os.path.join(data_path, n) for n in l]:
             #convert files
             cmd = 'python3 modelanalysis/pecanalysis.py -i {0} -c'.format(node_path)
             runcmd(cmd,self)
@@ -174,12 +175,11 @@ class MdlExecutor:
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument( "-l", dest="states_list", help="list of states to be executed", default= '[]')
+    parser.add_argument( "-l", dest="states_list", help="list of states to be executed: env, run, plot, stat", default= '[]')
     parser.add_argument( "-d", action="store_true", dest="debug", help="debug purpose", default= False)
 
     kvargs = parser.parse_args()
     sl = [n.strip() for n in ast.literal_eval(kvargs.states_list)] + ['end']
-    # sl = ['plot'] + ['end']
     config = ConfigParser()
     config.read('model.conf')
     DEBUG_FLAG = kvargs.debug
