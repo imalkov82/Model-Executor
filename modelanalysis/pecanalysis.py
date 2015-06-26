@@ -205,6 +205,9 @@ def plot_temperature(src_path, dst_path, tp_flag, mean_flag):
         max_height = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header = 0, usecols=['Points:2'])['Points:2'])
         print(max_height)
         fs = temperature_from_files(k, v, on_point_func=lambda x:  x - max_height)
+        t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]
+        leg_list = list(reversed(t_in_enumerate_v_))
+
         if k.find('riv') != -1:
             pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
         else:
@@ -218,8 +221,6 @@ def plot_temperature(src_path, dst_path, tp_flag, mean_flag):
                 for tn in v:
                     ax = fs.plot(x='arc_length', y=tn, ax=ax)
 
-                t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]
-                leg_list = list(reversed(t_in_enumerate_v_))
                 plt.title('BLOCK GEOTHREMA', fontsize = 12)
                 plt.legend(leg_list , loc='best', fontsize=10)
                 plt.xlabel('Length [km]')
@@ -232,13 +233,13 @@ def plot_temperature(src_path, dst_path, tp_flag, mean_flag):
                 plt.savefig(pic_name)
 
             if mean_flag is True:
-                with open(os.path.join(dst_path, 'geo_mean.txt'), 'a+') as f:
+                with open(os.path.join(dst_path, 'gmean.csv'), 'a+') as f:
                         riv_type = False
                         if k.find('riv') != -1:
                             riv_type = True
-                        riv_type_ = ['{0}={1}'.format(tt, vv) for tt, vv in zip(leg_list, gen_geoth_mean(fs, v, riv_type))]
+                        riv_type_ = ['{0},'.format(vv) for vv in gen_geoth_mean(fs, v, riv_type)]
                         join = ','.join(list(reversed(riv_type_)))
-                        n__format = '{0}: {1}\n'.format(os.path.split(pic_name)[1], join)
+                        n__format = '{0},{1}\n'.format(os.path.split(pic_name)[1], join)
                         f.write(n__format)
 
         except Exception as e:
