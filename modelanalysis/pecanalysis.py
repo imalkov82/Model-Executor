@@ -166,10 +166,8 @@ def gen_geoth_mean(fs, col_name_arr, riv_type):
     res = []
     for tn in col_name_arr:
         if riv_type is False:
-            print('esc type')
             sm = 5
         else:
-            print('riv type')
             s = fs[fs[tn] == min(fs[tn])]['arc_length']
             sm = s[s.index[:]].mean()
         abs_sm___ = fs['arc_length'] >= (sm - abs(sm * 0.1))
@@ -199,51 +197,68 @@ def temperature_from_files(k, v , on_point_func = lambda x : x):
         res.append(tmp_df)
     return reduce(lambda f1, f2: pnd.merge(f1, f2, on='arc_length', how='outer'), res)
 
-def plot_temperature(src_path, dst_path, tp_flag, mean_flag):
+def geoth_plot(src_path, dst_path, tp_flag):
+    print(geoth_plot.__name__)
     for k,v in temperature_finder(src_path).items():
         print(k)
-        max_height = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header = 0, usecols=['Points:2'])['Points:2'])
-        print(max_height)
-        fs = temperature_from_files(k, v, on_point_func=lambda x:  x - max_height)
-        t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]
-        leg_list = list(reversed(t_in_enumerate_v_))
-
-        if k.find('riv') != -1:
-            pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
-        else:
-            pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
-
+        fs, leg_list, pic_name = geoth_params(dst_path, k, v)
         try:
-            if tp_flag is True:
-                f = plt.figure()
-                ax = f.gca()
-
-                for tn in v:
-                    ax = fs.plot(x='arc_length', y=tn, ax=ax)
-
-                plt.title('BLOCK GEOTHREMA', fontsize = 12)
-                plt.legend(leg_list , loc='best', fontsize=10)
-                plt.xlabel('Length [km]')
-                plt.ylabel('Depth [Km]')
-
-                mn = [min(fs[i]) for i in v]
-                txs = np.linspace(-np.ceil(- min(mn)), 0, np.ceil(- min(mn)) + 1)
-                lebs = [str(-i) for i in txs[:-1]] + ['0']
-                plt.yticks(txs, lebs)
-                plt.savefig(pic_name)
-
-            if mean_flag is True:
-                with open(os.path.join(dst_path, 'gmean.csv'), 'a+') as f:
-                        riv_type = False
-                        if k.find('riv') != -1:
-                            riv_type = True
-                        riv_type_ = ['{0},'.format(vv) for vv in gen_geoth_mean(fs, v, riv_type)]
-                        join = ','.join(list(reversed(riv_type_)))
-                        n__format = '{0},{1}\n'.format(os.path.split(pic_name)[1], join)
-                        f.write(n__format)
-
+            _geoth_plot(fs, leg_list, pic_name, tp_flag, v)
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(k, e))
+
+
+def geoth_stats(src_path, dst_path):
+    df_write = pnd.DataFrame(None)
+    for k,v in temperature_finder(src_path).items():
+        print(k)
+        fs, leg_list, pic_name = geoth_params(dst_path, k, v)
+        riv_type = False
+        if k.find('riv') != -1:
+            riv_type = True
+        riv_type_ = gen_geoth_mean(fs, v,  riv_type)
+        s = pnd.Series(data=[pic_name] + riv_type_ , index=['name'] + leg_list)
+        df_write = df_write.append(s, ignore_index=True)
+    print(df_write)
+    df_write.to_csv(os.path.join(dst_path,'gmean.csv'), index=False)
+
+def _geoth_plot(fs, leg_list, pic_name, tp_flag, v):
+    if tp_flag is True:
+        f = plt.figure()
+        ax = f.gca()
+
+        for tn in v:
+            ax = fs.plot(x='arc_length', y=tn, ax=ax)
+
+        plt.title('BLOCK GEOTHREMA', fontsize=12)
+        plt.legend(leg_list, loc='best', fontsize=10)
+        plt.xlabel('Length [km]')
+        plt.ylabel('Depth [Km]')
+
+        mn = [min(fs[i]) for i in v]
+        txs = np.linspace(-np.ceil(- min(mn)), 0, np.ceil(- min(mn)) + 1)
+        lebs = [str(-i) for i in txs[:-1]] + ['0']
+        plt.yticks(txs, lebs)
+        plt.savefig(pic_name)
+
+
+def geoth_params(dst_path, k, v):
+    max_height = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header=0, usecols=['Points:2'])['Points:2'])
+    print(max_height)
+    fs = temperature_from_files(k, v, on_point_func=lambda x: x - max_height)
+    leg_list = get_geot_name(v)
+    if k.find('riv') != -1:
+        pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
+    else:
+        pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
+    return fs, leg_list, pic_name
+
+
+def get_geot_name(v):
+    t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]
+    leg_list = list(reversed(t_in_enumerate_v_))
+    return leg_list
+
 
 def convert_names(src_dir):
     count = 1
@@ -290,4 +305,6 @@ if __name__ == '__main__':
         plot_age_elevation(kvargs.soure_path, kvargs.dest_path)
     if kvargs.tflag is True or kvargs.tmean is True:
         print("Geotherma plot")
-        plot_temperature(kvargs.soure_path, kvargs.dest_path, kvargs.tflag, kvargs.tmean)
+        if kvargs.tflag: geoth_plot(kvargs.soure_path, kvargs.dest_path)
+        if kvargs.tmean: geoth_stats(kvargs.soure_path, kvargs.dest_path)
+

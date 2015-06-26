@@ -181,8 +181,8 @@ if __name__ == '__main__':
     parser.add_argument( "-d", action="store_true", dest="debug", help="debug purpose", default= False)
 
     kvargs = parser.parse_args()
-    sl = [n.strip() for n in ast.literal_eval(kvargs.states_list)] + ['end']
-    # sl = ['stat'] + ['end']
+    # sl = [n.strip() for n in ast.literal_eval(kvargs.states_list)] + ['end']
+    sl = ['stat'] + ['end']
     config = ConfigParser()
     config.read('model.conf')
     DEBUG_FLAG = kvargs.debug
