@@ -132,6 +132,8 @@ class StatisticsState:
         for node_path in [os.path.join(data_path,n) for n in l]:
             cmd = 'python3 modelanalysis/pecanalysis.py -i {0} -o {0} -ta'.format(node_path)
             runcmd(cmd, self)
+            cmd = 'find {1} -name Age-Elevation0.csv | sort | xargs {0} -n 5 > {1}/age-elevation-stats-{0}.txt'.format('head', node_path)
+            runcmd(cmd, self)
 
         if remaining_arr !=[] and remaining_arr != None:
             state = remaining_arr[0]
@@ -181,8 +183,7 @@ if __name__ == '__main__':
     parser.add_argument( "-d", action="store_true", dest="debug", help="debug purpose", default= False)
 
     kvargs = parser.parse_args()
-    # sl = [n.strip() for n in ast.literal_eval(kvargs.states_list)] + ['end']
-    sl = ['stat'] + ['end']
+    sl = [n.strip() for n in ast.literal_eval(kvargs.states_list)] + ['end']
     config = ConfigParser()
     config.read('model.conf')
     DEBUG_FLAG = kvargs.debug
