@@ -10,11 +10,17 @@ import scipy
 import scipy.stats
 from scipy.stats import linregress
 
+def say_name(f):
+    def wrapper(*args, **kargs):
+        print('calling {0}'.format(f.__name__))
+        return f(*args, **kargs)
+    return wrapper
+
 def df_ea_riv(frame1):
     fd1 = frame1[frame1['Points:2'] < max(frame1['Points:2'])]
-    fd  = fd1[fd1['ApatiteHeAge'] >= 1]
-    s = fd[fd['Points:2'] == min(fd['Points:2'])]['arc_length']
-    res_df = fd[fd['arc_length'] >= s[s.index[:]].mean()]
+    fd = fd1[fd1['ApatiteHeAge'] >= 1]
+    s = fd[fd['Points:2'] == min(fd['Points:2'])]['Points:0']
+    res_df = fd[fd['Points:0'] >= s[s.index[:]].mean()]
     res_df['Elevation'] = res_df['Points:2'] - min(frame1['Points:2'])
     return res_df
 
@@ -124,12 +130,13 @@ def uplift_from_file_name(fname):
     s_loc = fname.find('csv') - 3
     return int(fname[s_loc :s_loc + 1]) * 0.1
 
+@say_name
 def plot_age_elevation(src_path, dst_path):
     for dirname, name in ea_finder(src_path):
         ea = os.path.join(dirname, name)
         # root_dir = os.path.split(dirname)[0]
         # print(ea)
-        cols = ['ApatiteHeAge','Points:2', 'arc_length']
+        cols = ['ApatiteHeAge','Points:2', 'Points:0']
         frame1 = pnd.read_csv(ea, header=0, usecols = cols)
         if ea.find('riv') != -1:
             riv_case = True
@@ -148,20 +155,21 @@ def plot_age_elevation(src_path, dst_path):
 def gen_geoth_mean(fs, col_name_arr, riv_type):
     res = []
     for tn in col_name_arr:
-        if riv_type is False:
-            sm = 5
-        else:
-            s = fs[fs[tn] == min(fs[tn])]['arc_length']
+        sm = 5
+        atr = 'arc_length'
+        if riv_type:
+            atr = 'Height_{0}'.format(tn)
+            s = fs[fs[tn] == min(fs[tn])][atr]
             sm = s[s.index[:]].mean()
-        abs_sm___ = fs['arc_length'] >= (sm - abs(sm * 0.1))
-        sm_abs_sm___ = fs['arc_length'] < (sm + abs(sm * 0.1))
+        abs_sm___ = fs[atr] >= (sm - abs(sm * 0.1))
+        sm_abs_sm___ = fs[atr] < (sm + abs(sm * 0.1))
         res_fs = fs[(abs_sm___) & (sm_abs_sm___)]
         res.append(-1 * res_fs[tn].mean())
     return res
 
 
 def group_finder(root_dir):
-    return temperature_finder(root_dir,'group')
+    return temperature_finder(root_dir, 'group')
 
 def temperature_finder(root_dir, name='Temperature'):
     arr = []
@@ -171,15 +179,21 @@ def temperature_finder(root_dir, name='Temperature'):
                 arr.append((dirpath, f))
     return collect_to_dict(arr)
 
-def temperature_from_files(k, v , on_point_func = lambda x : x):
+def temperature_from_files(k, v, on_point_func=lambda x: x):
     res = []
     for i,t in enumerate(v):
-        tmp_df = pnd.read_csv(os.path.join(k,t), usecols = ['arc_length','Points:2'])
+        # print(t)
+        tmp_df = pnd.read_csv(os.path.join(k, t), usecols=['Points:0', 'Points:2', 'arc_length'])
+        # print(tmp_df['Points:2'].min())
         tmp_df[t] = on_point_func(tmp_df['Points:2'])
-        tmp_df.drop('Points:2', axis= 1 , inplace= True)
+        tmp_df['Height_{0}'.format(t)] = tmp_df['Points:0']
+
+        tmp_df.drop('Points:2', axis=1, inplace=True)
+        tmp_df.drop('Points:0', axis=1, inplace=True)
         res.append(tmp_df)
     return reduce(lambda f1, f2: pnd.merge(f1, f2, on='arc_length', how='outer'), res)
 
+@say_name
 def geoth_plot(src_path, dst_path):
     print(geoth_plot.__name__)
     for k,v in temperature_finder(src_path).items():
@@ -189,16 +203,15 @@ def geoth_plot(src_path, dst_path):
             _geoth_plot(fs, leg_list, pic_name, v)
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(k, e))
-
-
+@say_name
 def geoth_stats(src_path, dst_path):
     df_write = pnd.DataFrame(None)
     for k,v in temperature_finder(src_path).items():
-        # print(k)
-        fs, leg_list, pic_name = geoth_params(dst_path, k, v)
         riv_type = False
         if k.find('riv') != -1:
             riv_type = True
+
+        fs, leg_list, pic_name = geoth_params(dst_path, k, v, riv_type)
         riv_type_ = gen_geoth_mean(fs, v,  riv_type)
         s = pnd.Series(data=[pic_name] + riv_type_ , index=['name'] + leg_list)
         df_write = df_write.append(s, ignore_index=True)
@@ -209,7 +222,7 @@ def _geoth_plot(fs, leg_list, pic_name, v):
     ax = f.gca()
 
     for tn in v:
-        ax = fs.plot(x='arc_length', y=tn, ax=ax)
+        ax = fs.plot(x='arc_length'.format(tn), y=tn, ax=ax)
 
     plt.title('BLOCK GEOTHREMA', fontsize=12)
     plt.legend(leg_list, loc='best', fontsize=10)
@@ -223,10 +236,14 @@ def _geoth_plot(fs, leg_list, pic_name, v):
     plt.savefig(pic_name)
     plt.close()
 
-def geoth_params(dst_path, k, v):
-    max_height = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header=0, usecols=['Points:2'])['Points:2'])
-    # print(max_height)
-    fs = temperature_from_files(k, v, on_point_func=lambda x: x - max_height)
+def geoth_params(dst_path, k, v, riv_type):
+    read_csv = pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header=0, usecols=['Points:2'])
+    if riv_type:
+        _elevation = min(read_csv['Points:2'])
+    else:
+        _elevation = max(read_csv['Points:2'])
+
+    fs = temperature_from_files(k, v, on_point_func=lambda x: x - _elevation)
     leg_list = get_geot_name(v)
     if k.find('riv') != -1:
         pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
@@ -239,6 +256,7 @@ def get_geot_name(v):
     leg_list = list(reversed(t_in_enumerate_v_))
     return leg_list
 
+@say_name
 def convert_names(src_dir):
     for k,v in group_finder(src_dir).items():
         for p in v:
@@ -273,14 +291,8 @@ if __name__ == '__main__':
 
     kvargs = parser.parse_args()
 
-    if kvargs.convert_name is True:
-        print("converting files")
-        convert_names(kvargs.soure_path)
-    if kvargs.aeflag is True:
-        print("Age Elevation plot")
-        plot_age_elevation(kvargs.soure_path, kvargs.dest_path)
-    if kvargs.tflag is True or kvargs.tmean is True:
-        print("Geotherma plot")
-        if kvargs.tflag: geoth_plot(kvargs.soure_path, kvargs.dest_path)
-        if kvargs.tmean: geoth_stats(kvargs.soure_path, kvargs.dest_path)
+    if kvargs.convert_name: convert_names(kvargs.soure_path)
+    if kvargs.aeflag: plot_age_elevation(kvargs.soure_path, kvargs.dest_path)
+    if kvargs.tflag: geoth_plot(kvargs.soure_path, kvargs.dest_path)
+    if kvargs.tmean: geoth_stats(kvargs.soure_path, kvargs.dest_path)
 
