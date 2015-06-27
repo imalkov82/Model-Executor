@@ -74,6 +74,7 @@ def plot_ea(frame1, filt_df, dst_path, uplift_rate, riv_case):
     lebs = ['0'] + [str(i) for i in txs[1:]]
     plt.yticks(txs, list(reversed(lebs)))
     plt.savefig(dst_path)
+    plt.close()
 
 # TODO: optimize using pecinputstats.csv
 def define_max_age(df1, tot_len, best_tread, riv_case, oldest_age):
@@ -86,13 +87,13 @@ def define_max_age(df1, tot_len, best_tread, riv_case, oldest_age):
     df1['slope_diff'] = abs(df1['slope'] - best_tread)
 
     if riv_case is True:
-        print('river case')
+        # print('river case')
         df1 = df1.sort(['arr_len'], ascending = [0]).head(np.round(df1.shape[0] * 0.5))
         df1 = df1.sort(['r_square'], ascending = [0]).head(np.round(df1.shape[0] * 0.5))
         riv_fd_by_slope_diff = df1
         df2 = riv_fd_by_slope_diff[riv_fd_by_slope_diff.r_square == riv_fd_by_slope_diff.r_square.max()]
     else:
-        print('escarpment case')
+        # print('escarpment case')
         riv_fd_by_slope_diff = df1.sort(['slope_diff'], ascending = [1]).head(np.round(df1.shape[0] * 0.5))
         # df1 = df1.sort(['slope_diff'], ascending = [1]).head(np.round(df1.shape[0] * 0.5))
         # riv_fd_by_slope_diff = df1[df1.sup_age < np.ceil(0.85 * oldest_age)]
@@ -101,39 +102,21 @@ def define_max_age(df1, tot_len, best_tread, riv_case, oldest_age):
     print(riv_fd_by_slope_diff)
     print('max_age = {0}'.format(max_age))
     s = df2[df2['sup_age'] == max_age]
-    return max_age , s['slope'], s['r_square']
+    return max_age, s['slope'], s['r_square']
 
 def find_max_treadline(data_frame, opt_tread, riv_case):
     pnd_ds = data_frame['ApatiteHeAge']
     ds = np.array(pnd_ds)
-
-    max_age = 0
-    min_tol = 1
-
-    slope_dict = {}
-    slope_dict['slope'] = []
-    slope_dict['r_square'] = []
-    slope_dict['arr_len'] = []
-    slope_dict['sup_age'] = []
-    slope_dict['max_height'] = []
+    columns = ['slope', 'r_square', 'arr_len', 'sup_age', 'max_height']
+    pnd_data_frame = pnd.DataFrame(data=None, columns=columns)
 
     for sup_age in sorted(ds)[1:]:
         x = data_frame[data_frame['ApatiteHeAge'] < sup_age]['ApatiteHeAge']
         y = data_frame[data_frame['ApatiteHeAge'] < sup_age]['Points:2']
         minh = data_frame['Points:2'].min()
         slope, intercept, r_value, p_value, std_err = linregress(x, y)
-
-        slope_dict['slope'].append(slope)
-        slope_dict['r_square'].append(r_value**2)
-        slope_dict['arr_len'].append(len(x))
-        slope_dict['sup_age'].append(sup_age)
-        slope_dict['max_height'].append(max(y)- minh)
-
-        # if abs(opt_tread - slope) < min_tol:
-        #     min_tol = abs(opt_tread - slope)
-        #     max_age = sup_age
-
-    pnd_data_frame = pnd.DataFrame(slope_dict, columns = ['slope', 'r_square', 'arr_len', 'sup_age', 'max_height'])
+        s = pnd.Series(data = [slope, r_value**2, len(x), sup_age, max(y)- minh], index=columns)
+        pnd_data_frame = pnd_data_frame.append(s, ignore_index=True)
     max_age, slope, r_square = define_max_age(pnd_data_frame, len(ds), opt_tread, riv_case, max(ds))
     return max_age, slope, r_square
 
@@ -144,8 +127,8 @@ def uplift_from_file_name(fname):
 def plot_age_elevation(src_path, dst_path):
     for dirname, name in ea_finder(src_path):
         ea = os.path.join(dirname, name)
-        root_dir = os.path.split(dirname)[0]
-        print(ea)
+        # root_dir = os.path.split(dirname)[0]
+        # print(ea)
         cols = ['ApatiteHeAge','Points:2', 'arc_length']
         frame1 = pnd.read_csv(ea, header=0, usecols = cols)
         if ea.find('riv') != -1:
@@ -197,13 +180,13 @@ def temperature_from_files(k, v , on_point_func = lambda x : x):
         res.append(tmp_df)
     return reduce(lambda f1, f2: pnd.merge(f1, f2, on='arc_length', how='outer'), res)
 
-def geoth_plot(src_path, dst_path, tp_flag):
+def geoth_plot(src_path, dst_path):
     print(geoth_plot.__name__)
     for k,v in temperature_finder(src_path).items():
-        print(k)
+        # print(k)
         fs, leg_list, pic_name = geoth_params(dst_path, k, v)
         try:
-            _geoth_plot(fs, leg_list, pic_name, tp_flag, v)
+            _geoth_plot(fs, leg_list, pic_name, v)
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(k, e))
 
@@ -211,7 +194,7 @@ def geoth_plot(src_path, dst_path, tp_flag):
 def geoth_stats(src_path, dst_path):
     df_write = pnd.DataFrame(None)
     for k,v in temperature_finder(src_path).items():
-        print(k)
+        # print(k)
         fs, leg_list, pic_name = geoth_params(dst_path, k, v)
         riv_type = False
         if k.find('riv') != -1:
@@ -219,32 +202,30 @@ def geoth_stats(src_path, dst_path):
         riv_type_ = gen_geoth_mean(fs, v,  riv_type)
         s = pnd.Series(data=[pic_name] + riv_type_ , index=['name'] + leg_list)
         df_write = df_write.append(s, ignore_index=True)
-    print(df_write)
     df_write.to_csv(os.path.join(dst_path,'gmean.csv'), index=False)
 
-def _geoth_plot(fs, leg_list, pic_name, tp_flag, v):
-    if tp_flag is True:
-        f = plt.figure()
-        ax = f.gca()
+def _geoth_plot(fs, leg_list, pic_name, v):
+    f = plt.figure()
+    ax = f.gca()
 
-        for tn in v:
-            ax = fs.plot(x='arc_length', y=tn, ax=ax)
+    for tn in v:
+        ax = fs.plot(x='arc_length', y=tn, ax=ax)
 
-        plt.title('BLOCK GEOTHREMA', fontsize=12)
-        plt.legend(leg_list, loc='best', fontsize=10)
-        plt.xlabel('Length [km]')
-        plt.ylabel('Depth [Km]')
+    plt.title('BLOCK GEOTHREMA', fontsize=12)
+    plt.legend(leg_list, loc='best', fontsize=10)
+    plt.xlabel('Length [km]')
+    plt.ylabel('Depth [Km]')
 
-        mn = [min(fs[i]) for i in v]
-        txs = np.linspace(-np.ceil(- min(mn)), 0, np.ceil(- min(mn)) + 1)
-        lebs = [str(-i) for i in txs[:-1]] + ['0']
-        plt.yticks(txs, lebs)
-        plt.savefig(pic_name)
-
+    mn = [min(fs[i]) for i in v]
+    txs = np.linspace(-np.ceil(- min(mn)), 0, np.ceil(- min(mn)) + 1)
+    lebs = [str(-i) for i in txs[:-1]] + ['0']
+    plt.yticks(txs, lebs)
+    plt.savefig(pic_name)
+    plt.close()
 
 def geoth_params(dst_path, k, v):
     max_height = max(pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header=0, usecols=['Points:2'])['Points:2'])
-    print(max_height)
+    # print(max_height)
     fs = temperature_from_files(k, v, on_point_func=lambda x: x - max_height)
     leg_list = get_geot_name(v)
     if k.find('riv') != -1:
@@ -253,17 +234,13 @@ def geoth_params(dst_path, k, v):
         pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
     return fs, leg_list, pic_name
 
-
 def get_geot_name(v):
     t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]
     leg_list = list(reversed(t_in_enumerate_v_))
     return leg_list
 
-
 def convert_names(src_dir):
-    count = 1
     for k,v in group_finder(src_dir).items():
-        # print('key={0}: val={1}'.format(k, ' '.join(sorted(v))))
         for p in v:
             convert_name = ''
             fileName, fileExtention = os.path.splitext(p)
@@ -281,7 +258,6 @@ def convert_names(src_dir):
                         print('cannot convert file {0}'.format(fileName))
 
             cmd = 'cp {0} {1}'.format(os.path.join(k,p),os.path.join(k,convert_name))
-            # print(cmd)
             os.popen(cmd)
 
 # TODO: refuctor to OO
