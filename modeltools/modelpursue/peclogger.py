@@ -5,13 +5,15 @@ import os
 import pprint
 import timeit
 import time
+import sys
 
 class ModelLogger:
     def __init__(self, driver):
         self._driver = driver
         log_name = '{0}/log_{1}.txt'.format(os.environ['HOME'], os.getpid())
         print('ModelLogger - log file: {0}'.format(log_name))
-        logging.basicConfig(filename=log_name,level=logging.DEBUG)
+        # logging.basicConfig(filename=log_name,level=logging.DEBUG)
+        logging.basicConfig(filename=sys.stdout,level=logging.DEBUG)
         self._logger = logging.getLogger('Model Logger')
 
 
