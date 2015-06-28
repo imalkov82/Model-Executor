@@ -59,7 +59,7 @@ class EnvState:
 class TestState:
     @expose_mdlexe
     def process(self, remaining_arr, mdl_executor):
-        cmd = 'python3 modelexe/mdlexec.py -m Test'
+        cmd = 'python3 modelexe/mdlexec.py -m Test -f {0}'.format(mdl_executor._exec_log)
         runcmd(cmd, self)
         mdl_executor.state = PecubeState()
         return remaining_arr
@@ -67,7 +67,7 @@ class TestState:
 class PecubeState:
     @expose_mdlexe
     def process(self, remaining_arr, mdl_executor):
-        cmd = 'python3 modelexe/mdlexec.py -m Pecube'
+        cmd = 'python3 modelexe/mdlexec.py -m Pecube -f {0}'.format(mdl_executor._exec_log)
         runcmd(cmd, self)
         mdl_executor.state = VtkState()
         return remaining_arr
@@ -75,7 +75,7 @@ class PecubeState:
 class VtkState:
     @expose_mdlexe
     def process(self, remaining_arr, mdl_executor):
-        cmd = 'python3 modelexe/mdlexec.py -m Vtk'
+        cmd = 'python3 modelexe/mdlexec.py -m Vtk -f {0}'.format(mdl_executor._exec_log)
         runcmd(cmd, self)
         if remaining_arr != [] and remaining_arr != None:
             state = remaining_arr[0]
@@ -167,6 +167,7 @@ class MdlExecutor:
         self.states_arr = states_arr
         self.state = InitState()
         self.mdl_conf = config
+        self._exec_log = '{0}/log_{1}.txt'.format(os.environ['HOME'], os.getpid())
 
     @expose_mdlexe
     def process(self, remaining_arr):

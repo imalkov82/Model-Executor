@@ -198,7 +198,7 @@ def geoth_plot(src_path, dst_path):
     print(geoth_plot.__name__)
     for k,v in temperature_finder(src_path).items():
         # print(k)
-        fs, leg_list, pic_name = geoth_params(dst_path, k, v)
+        fs, leg_list, pic_name, _ = geoth_params(dst_path, k, v)
         try:
             _geoth_plot(fs, leg_list, pic_name, v)
         except Exception as e:
@@ -207,11 +207,7 @@ def geoth_plot(src_path, dst_path):
 def geoth_stats(src_path, dst_path):
     df_write = pnd.DataFrame(None)
     for k,v in temperature_finder(src_path).items():
-        riv_type = False
-        if k.find('riv') != -1:
-            riv_type = True
-
-        fs, leg_list, pic_name = geoth_params(dst_path, k, v, riv_type)
+        fs, leg_list, pic_name, riv_type = geoth_params(dst_path, k, v)
         riv_type_ = gen_geoth_mean(fs, v,  riv_type)
         s = pnd.Series(data=[pic_name] + riv_type_ , index=['name'] + leg_list)
         df_write = df_write.append(s, ignore_index=True)
@@ -236,20 +232,23 @@ def _geoth_plot(fs, leg_list, pic_name, v):
     plt.savefig(pic_name)
     plt.close()
 
-def geoth_params(dst_path, k, v, riv_type):
+def geoth_params(dst_path, k, v):
     read_csv = pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header=0, usecols=['Points:2'])
-    if riv_type:
-        _elevation = min(read_csv['Points:2'])
-    else:
+
+
+    if k.find('riv') != -1:
+        pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
         _elevation = max(read_csv['Points:2'])
+        riv_type = False
+    else:
+        pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
+        riv_type = True
+        _elevation = min(read_csv['Points:2'])
 
     fs = temperature_from_files(k, v, on_point_func=lambda x: x - _elevation)
     leg_list = get_geot_name(v)
-    if k.find('riv') != -1:
-        pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
-    else:
-        pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
-    return fs, leg_list, pic_name
+
+    return fs, leg_list, pic_name, riv_type
 
 def get_geot_name(v):
     t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]

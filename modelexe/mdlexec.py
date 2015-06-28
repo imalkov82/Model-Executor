@@ -119,6 +119,7 @@ if __name__ == '__main__':
     parser.add_argument( "-s", action="store_true", dest="stats", help="collect statistics on model", default= False)
     parser.add_argument( "-r", action="store_true", dest="dry_run", help="dry run", default= False)
     parser.add_argument( "-i", dest="single_index", help="single file index", default= -1)
+    parser.add_argument( "-f", dest="log_name", help="path to file name", default= '')
     kvargs = parser.parse_args()
     #set config rules
     config = ConfigParser()
@@ -127,7 +128,7 @@ if __name__ == '__main__':
     #execute
     modexec = ModelExecutor(kvargs.pec_model, config['Default']['peconfig'].replace('~', os.environ['HOME']),
                             config['Execute']['max_pool_size'], kvargs.dry_run, kvargs.single_index)
-    exe_logger = ExecLogger(modexec)
+    exe_logger = ExecLogger(modexec, kvargs.log_name)
     modexec.attach(exe_logger)
     modexec()
     # main(kvargs.model, kvargs.dry_run)

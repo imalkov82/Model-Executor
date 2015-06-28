@@ -8,18 +8,18 @@ import time
 import sys
 
 class ModelLogger:
-    def __init__(self, driver):
+    def __init__(self, driver, log_name):
         self._driver = driver
-        log_name = '{0}/log_{1}.txt'.format(os.environ['HOME'], os.getpid())
+        # log_name = '{0}/log_{1}.txt'.format(os.environ['HOME'], os.getpid())
         print('ModelLogger - log file: {0}'.format(log_name))
-        # logging.basicConfig(filename=log_name,level=logging.DEBUG)
-        logging.basicConfig(filename=sys.stdout,level=logging.DEBUG)
+        logging.basicConfig(filename=log_name,level=logging.DEBUG)
+        # logging.basicConfig(filename=sys.stdout,level=logging.DEBUG)
         self._logger = logging.getLogger('Model Logger')
 
 
 class EnvLogger(ModelLogger):
-    def __init__(self, driver):
-        super.__init__(driver)
+    def __init__(self, driver, log_name):
+        super.__init__(driver, log_name)
 
     def __call__(self, *args, **kwargs):
         pass
@@ -33,8 +33,8 @@ class ExecLogger(ModelLogger):
         4: 'exec_complete_state',
         5: 'app_complete_state'}
 
-    def __init__(self, driver):
-        super().__init__(driver)
+    def __init__(self, driver, log_name):
+        super().__init__(driver, log_name)
 
     def init_state(self):
         self._logger.info('Model Executor state: INIT ')
