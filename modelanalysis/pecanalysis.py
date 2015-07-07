@@ -152,15 +152,19 @@ def plot_age_elevation(src_path, dst_path):
             print('error in file={0}, error msg = {1}'.format(ea, e))
 
 ############### TEMPERATURE ###################################################
-def gen_geoth_mean(fs, col_name_arr, riv_type):
+@say_name
+def gen_geoth_mean(fs, col_name_arr, riv_type, sm):
     res = []
+    print('riv_type={0}'.format(riv_type))
     for tn in col_name_arr:
-        sm = 5
         atr = 'arc_length'
         if riv_type:
             atr = 'Height_{0}'.format(tn)
             s = fs[fs[tn] == min(fs[tn])][atr]
+            print(s)
             sm = s[s.index[:]].mean()
+        print('sm={0}'.format(sm))
+        print('atr={0}'.format(atr))
         abs_sm___ = fs[atr] >= (sm - abs(sm * 0.1))
         sm_abs_sm___ = fs[atr] < (sm + abs(sm * 0.1))
         res_fs = fs[(abs_sm___) & (sm_abs_sm___)]
@@ -204,13 +208,17 @@ def geoth_plot(src_path, dst_path):
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(k, e))
 @say_name
-def geoth_stats(src_path, dst_path):
+def geoth_stats(src_path, dst_path ,sm):
+    print('sm={0}'.format(sm))
     df_write = pnd.DataFrame(None)
     for k,v in temperature_finder(src_path).items():
         fs, leg_list, pic_name, riv_type = geoth_params(dst_path, k, v)
-        riv_type_ = gen_geoth_mean(fs, v,  riv_type)
+        pic_name = os.path.split(pic_name)[1]
+        pic_name = os.path.splitext(pic_name)[0]
+        riv_type_ = gen_geoth_mean(fs, v, riv_type, sm)
         s = pnd.Series(data=[pic_name] + riv_type_ , index=['name'] + leg_list)
         df_write = df_write.append(s, ignore_index=True)
+    print('save to: {0}'.format(os.path.join(dst_path,'gmean.csv')))
     df_write.to_csv(os.path.join(dst_path,'gmean.csv'), index=False)
 
 def _geoth_plot(fs, leg_list, pic_name, v):
@@ -231,31 +239,34 @@ def _geoth_plot(fs, leg_list, pic_name, v):
     plt.yticks(txs, lebs)
     plt.savefig(pic_name)
     plt.close()
-
+@say_name
 def geoth_params(dst_path, k, v):
     read_csv = pnd.read_csv('{0}/Age-Elevation0.csv'.format(k), header=0, usecols=['Points:2'])
-
-
+    print(k)
     if k.find('riv') != -1:
+        print('riv case')
         pic_name = name_dst_file(k, dst_path, '_riv_geot.png')
-        _elevation = max(read_csv['Points:2'])
-        riv_type = False
-    else:
-        pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
-        riv_type = True
         _elevation = min(read_csv['Points:2'])
+        riv_type = True
+    else:
+        print('esc case')
+        pic_name = name_dst_file(k, dst_path, '_esc_geot.png')
+        riv_type = False
+        _elevation = max(read_csv['Points:2'])
+    print('_elevation = {0}'.format(_elevation))
 
     fs = temperature_from_files(k, v, on_point_func=lambda x: x - _elevation)
     leg_list = get_geot_name(v)
 
     return fs, leg_list, pic_name, riv_type
 
+
 def get_geot_name(v):
     t_in_enumerate_v_ = ["{0}C".format((int((os.path.splitext(t)[0])[-1]) + 1) * 25) for i, t in enumerate(v)]
     leg_list = list(reversed(t_in_enumerate_v_))
     return leg_list
 
-@say_name
+
 def convert_names(src_dir):
     for k,v in group_finder(src_dir).items():
         for p in v:
@@ -277,6 +288,22 @@ def convert_names(src_dir):
             cmd = 'cp {0} {1}'.format(os.path.join(k,p),os.path.join(k,convert_name))
             os.popen(cmd)
 
+#-----------------------------------------------------
+# Nearest neighbour classifier
+#-----------------------------------------------------
+def distance(p0, p1):
+    return np.sum((p0-p1)**2)
+
+def nn_classify(training_set, training_labels, new_example):
+    dists = np.array([distance(t, new_example)
+        for t in training_set])
+    nearest = dists.argmin()
+    return training_labels[nearest]
+
+def age_elevation_nn(soure_path, dest_path):
+    pass
+
+
 # TODO: refuctor to OO
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -287,11 +314,14 @@ if __name__ == '__main__':
     parser.add_argument( "-tp", action="store_true", dest="tflag", help="temperature plot", default=False)
     parser.add_argument( "-ta", action="store_true", dest="tmean", help="temperature mean", default=False)
     parser.add_argument( "-c", action="store_true", dest="convert_name", help="converts group files to Temperature and Age-Elevation", default=False)
+    parser.add_argument( "-n", action="store_true", dest="nearest", help="will calculate the nearest neighbour of given data set", default=False)
+    parser.add_argument( "-d", dest="esc_dist", help="analysis distanse for escarpment type")
+
 
     kvargs = parser.parse_args()
 
     if kvargs.convert_name: convert_names(kvargs.soure_path)
     if kvargs.aeflag: plot_age_elevation(kvargs.soure_path, kvargs.dest_path)
     if kvargs.tflag: geoth_plot(kvargs.soure_path, kvargs.dest_path)
-    if kvargs.tmean: geoth_stats(kvargs.soure_path, kvargs.dest_path)
-
+    if kvargs.tmean: geoth_stats(kvargs.soure_path, kvargs.dest_path, int(kvargs.esc_dist))
+    if kvargs.nearest: age_elevation_nn(kvargs.soure_path, kvargs.dest_path)
