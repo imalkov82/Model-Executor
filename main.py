@@ -39,7 +39,7 @@ def runcmd(cmd, kls):
 class EnvState:
     @expose_mdlexe
     def process(self, remaining_arr, mdl_executor):
-        cmd = 'python3 modelenv/mdlenv -c'
+        cmd = 'python3 modelenv/mdlenv.py -c'
         runcmd(cmd, EnvState)
         if remaining_arr != [] and remaining_arr != None:
             state = remaining_arr[0]
@@ -98,11 +98,11 @@ class CsvState:
 class GraphState:
     @expose_mdlexe
     def process(self, remaining_arr, mdl_executor):
-        data_ = ast.literal_eval(mdl_executor.mdl_conf['sub_data'])
+        data_ = ast.literal_eval(mdl_executor.defaults['sub_data'])
         l = [n.strip() for n in ast.literal_eval(data_)]
-        data_path = mdl_executor.mdl_conf['data_root'].replace('~', os.environ['HOME'])
-        age_pic =  mdl_executor.mdl_conf['age_pic'].replace('~', os.environ['HOME'])
-        geotherm_pic =  mdl_executor.mdl_conf['geoterm_pic'].replace('~', os.environ['HOME'])
+        data_path = mdl_executor.defaults['data_root'].replace('~', os.environ['HOME'])
+        age_pic =  mdl_executor.defaults['age_pic'].replace('~', os.environ['HOME'])
+        geotherm_pic =  mdl_executor.defaults['geoterm_pic'].replace('~', os.environ['HOME'])
         for node_path in [os.path.join(data_path, n) for n in l]:
             #convert files
             cmd = 'python3 modelanalysis/pecanalysis.py -i {0} -c'.format(node_path)
@@ -126,11 +126,11 @@ class GraphState:
 class StatisticsState:
     @expose_mdlexe
     def process(self, remaining_arr, mdl_executor):
-        data_ = ast.literal_eval(mdl_executor.mdl_conf['sub_data'])
+        data_ = ast.literal_eval(mdl_executor.defaults['sub_data'])
         l = [n.strip() for n in ast.literal_eval(data_)]
-        data_path = mdl_executor.mdl_conf['data_root'].replace('~', os.environ['HOME'])
+        data_path = mdl_executor.defaults['data_root'].replace('~', os.environ['HOME'])
         for node_path in [os.path.join(data_path,n) for n in l]:
-            cmd = 'python3 modelanalysis/pecanalysis.py -i {0} -o {0} -ta'.format(node_path)
+            cmd = 'python3 modelanalysis/pecanalysis.py -i {0} -o {0} -ta -d {1}'.format(node_path, mdl_executor.analysis['esc_dist'])
             runcmd(cmd, self)
             cmd = 'find {1} -name Age-Elevation0.csv | sort | xargs {0} -n 5 > {1}/age-elevation-stats-{0}.txt'.format('head', node_path)
             runcmd(cmd, self)
@@ -163,10 +163,11 @@ class InitState:
         return remaining_arr
 
 class MdlExecutor:
-    def __init__(self, states_arr, config):
+    def __init__(self, states_arr, config, analysis):
         self.states_arr = states_arr
         self.state = InitState()
-        self.mdl_conf = config
+        self.defaults = config
+        self.analysis = analysis
         self._exec_log = '{0}/log_{1}.txt'.format(os.environ['HOME'], os.getpid())
 
     @expose_mdlexe
@@ -189,6 +190,6 @@ if __name__ == '__main__':
     config.read('model.conf')
     DEBUG_FLAG = kvargs.debug
 
-    mlexe = MdlExecutor(sl, config['Default'])
+    mlexe = MdlExecutor(sl, config['Default'], config['Analysis'])
     mlexe.start()
 
