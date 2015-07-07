@@ -13,12 +13,12 @@ from modeltools.modelinput.datarule import StepInput
 from modelexe.mdlruncmd import runcmd
 from argparse import ArgumentParser
 
-def parse_to_int(f):
+def parse_to_float(f):
     def wrap(*args, **kwargs):
         args_res = []
         for a in args:
             if isinstance(a, str):
-                args_res.append(int(a))
+                args_res.append(float(a))
             else:
                 args_res.append(a)
         return f(*args_res, **kwargs)
@@ -130,17 +130,17 @@ class PecubeInputDir(EnvNode):
             raise e
 
 class PecubeDataDir(EnvNode):
-    def __init__(self, path, esc_ang, cyn_ang, grid_type, row_num, col_num, steps):
+    def __init__(self, path, esc_ang, velo_ang, cyn_ang, grid_type, row_num, col_num, steps):
         self._root_path = path
         data_dir = os.path.join(path, 'data')
         super().__init__(data_dir, 0)
-        self._map_env(esc_ang, cyn_ang, grid_type, row_num, col_num, steps)
+        self._map_env(esc_ang, velo_ang, cyn_ang, grid_type, row_num, col_num, steps)
 
-    @parse_to_int
-    def _map_env(self, esc_ang, cyn_ang, grid_type, row_num, col_num, steps):
+    @parse_to_float
+    def _map_env(self, esc_ang, velo_ang, cyn_ang, grid_type, row_num, col_num, steps):
         for i, mhigt in enumerate(steps):
             step_name = 'step{0}.txt'.format(i)
-            stepi = StepInput(step_name, esc_ang, cyn_ang, grid_type, row_num, col_num, mhigt)
+            stepi = StepInput(step_name, esc_ang, velo_ang, cyn_ang, grid_type, row_num, col_num, mhigt)
             super().attach_child_node(EnvNode(os.path.join(self._path, step_name), 1, stepi,
                                               lambda env_context, out_path: env_context.save_to_file(out_path)))
 
@@ -187,20 +187,19 @@ class PecubeVtkDir(EnvNode):
         super().__init__(data_dir, 0)
 
 class SessionEnv(EnvNode):
-    def __init__(self, root_path, esc_ang, cyn_ang, col_num, row_num, grid_type,
+    def __init__(self, root_path, esc_ang, velo_ang, cyn_ang, col_num, row_num, grid_type,
                  steps, topo_input, fault_input, bin_path, topo_diff, fault_diff):
 
         super().__init__(root_path.replace('~', os.environ['HOME']), 0)
-
-        self._map_env(esc_ang, cyn_ang, col_num, row_num, grid_type,
+        self._map_env(esc_ang, velo_ang, cyn_ang, col_num, row_num, grid_type,
                       steps, topo_input, fault_input, bin_path, topo_diff, fault_diff)
 
-    def _map_env(self, esc_ang, cyn_ang, col_num, row_num, grid_type,
+    def _map_env(self, esc_ang, velo_ang, cyn_ang, col_num, row_num, grid_type,
                       steps, topo_input, fault_input, bin_path, topo_diff, fault_diff):
         # INPUT
         super().attach_child_node(PecubeInputDir(self._path, topo_input, fault_input, topo_diff, fault_diff))
         # DATA
-        super().attach_child_node(PecubeDataDir(self._path, esc_ang, cyn_ang, grid_type,
+        super().attach_child_node(PecubeDataDir(self._path, esc_ang, velo_ang, cyn_ang, grid_type,
                                                        row_num, col_num ,steps))
         # VTK
         super().attach_child_node(PecubeVtkDir(self._path))
@@ -232,8 +231,8 @@ class ModelEnv(EnvNode):
         wrk_data['execution_directory'] = wrk_data['execution_directory'].apply(lambda x : x.replace('~', os.environ['HOME']))
         #map sessions
         for _ , s in wrk_data.iterrows():
-            super().attach_child_node(SessionEnv(s['execution_directory'], conf_env['escarpment_angle'], conf_env['canyon_angle'],
-                                             s['col_num'], s['row_num'], s['grid_type'],
+            super().attach_child_node(SessionEnv(s['execution_directory'], conf_env['escarpment_angle'], conf_env['velo_angle'],
+                                            conf_env['canyon_angle'], s['col_num'], s['row_num'], s['grid_type'],
                                              [s['step{0}'.format(i)]for i in range(int(conf_env['steps_num']))],
                                              s['sample'] + 'input/topo_parameters.txt', s['sample'] + 'input/fault_parameters.txt',
                                              conf_env['bin_dir'], conf_env['topo_diff'], conf_env['fault_diff']))
