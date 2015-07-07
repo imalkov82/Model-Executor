@@ -25,3 +25,11 @@ FLOW:
 3. analyse the results:
     a. vtk module: create csv files
     b. statistics and graphs
+
+
+TODO:
+1. CONTERT TOPOGRAPHY FILE ($HOME/Documents/CODE/FORTRAN/Original Models/Cascade/cascade/cascade/RUN1) to VTK
+    USE: code file createvtk.90 and see the lecture:
+    (/home/imalkov/Videos/PROGRAMMING/PYTHON/Pluralsight - Python Beyond The Basics/08. Iterables and Iteration)
+2. add analytical head solver to project. see reference file (~/DOCUMENTS/Future_Documents/GDRIVE_POST/Research/PyScripts/newpys/heatsol.py)
+
