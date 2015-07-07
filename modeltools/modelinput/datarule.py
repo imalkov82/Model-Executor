@@ -7,9 +7,10 @@ class StepsContainer:
     pass
 
 class StepInput:
-    def __init__(self, step_name, esc_ang, cyn_ang, grid_type, row_num, col_num, max_high):
+    def __init__(self, step_name, esc_ang, velo_ang, cyn_ang, grid_type, row_num, col_num, max_high):
         self._step_name = step_name
         self._esc_ang = esc_ang
+        self._velo_ang = velo_ang
         self._cyn_ang = cyn_ang
         self._grid_type = grid_type
         self._row_num = row_num
@@ -24,8 +25,9 @@ class StepInput:
             print('generate topography')
             zs_func = StepInput.surfgen_factory(self._row_num, self._col_num, self._esc_ang)
 
-        step = zs_func(self._high * numpy.sin(numpy.deg2rad(self._esc_ang)), StepInput.gen_mgsurf)
-        print('write topography to file')
+        print('height = {1} velo_angle={0}'.format(self._velo_ang, self._high))
+        step = zs_func(self._high * numpy.sin(numpy.deg2rad(self._velo_ang)), StepInput.gen_mgsurf)
+        print('write topography to file: {0}'.format(save_path))
         numpy.savetxt(save_path, step.flatten(),fmt='%d')
 
     @staticmethod
