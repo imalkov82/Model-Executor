@@ -98,7 +98,9 @@ class PecubeInputDir(EnvNode):
         type_diff = '{0}_diff'.format(type)
         type_src = '{0}_src'.format(type)
         def create_file(context, out_path):
+            print('write to file: {0}'.format(out_path))
             for key,val in context[type_diff].items():
+                print('k={0},v={1}'.format(key, val))
                 setattr(context[type_src], key, val)
             context[type_src].save_to_file(out_path)
         return create_file

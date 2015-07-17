@@ -256,48 +256,98 @@ class TopoInput:
         # self._dyn_part[0].split(' ')[0] = val
     @rc.setter
     def rc(self, val):
-        #TODO
-        s = self._dyn_part[0].split(' ')[1]
-        s.split(',')[0]
+        s = self._dyn_part[0].split(' ')
+        s0 = s[0]
+        p = s[1].split(',')
+        p[0] = val
+        self._dyn_part[0] = ' '.join([s0] + [','.join(p)])
     @rm.setter
     def rm(self, val):
-        self._dyn_part[0].split(',')[1] = val
+        s = self._dyn_part[0].split(' ')
+        s0 = s[0]
+        p = s[1].split(',')
+        p[1] = val
+        self._dyn_part[0] = ' '.join([s0] + [','.join(p)])
     @E.setter
     def E(self, val):
-        self._dyn_part[0].split(',')[2] = val
+        s = self._dyn_part[0].split(' ')
+        s0 = s[0]
+        p = s[1].split(',')
+        p[2] = val
+        self._dyn_part[0] = ' '.join([s0] + [','.join(p)])
+        # self._dyn_part[0].split(',')[2] = val
     @n.setter
     def n(self, val):
-        self._dyn_part[0].split(',')[3] = val
+        s = self._dyn_part[0].split(' ')
+        s0 = s[0]
+        p = s[1].split(',')
+        p[3] = val
+        self._dyn_part[0] = ' '.join([s0] + [','.join(p)])
+        # self._dyn_part[0].split(',')[3] = val
     @L.setter
     def L(self, val):
-        self._dyn_part[0].split(',')[4] = val
+        s = self._dyn_part[0].split(' ')
+        s0 = s[0]
+        p = s[1].split(',')
+        p[4] = val
+        self._dyn_part[0] = ' '.join([s0] + [','.join(p)])
+        # self._dyn_part[0].split(',')[4] = val
     @nx.setter
     def nx(self, val):
-        self._dyn_part[0].split(',')[5] = val
+        s = self._dyn_part[0].split(' ')
+        s0 = s[0]
+        p = s[1].split(',')
+        p[5] = val
+        self._dyn_part[0] = ' '.join([s0] + [','.join(p)])
+        # self._dyn_part[0].split(',')[5] = val
     @ny.setter
     def ny(self, val):
-        self._dyn_part[0].split(',')[6] = val
+        s = self._dyn_part[0].split(' ')
+        s0 = s[0]
+        p = s[1].split(',')
+        p[6] = val
+        self._dyn_part[0] = ' '.join([s0] + [','.join(p)])
+        # self._dyn_part[0].split(',')[6] = val
     @zl.setter
     def zl(self, val):
-        self._dyn_part[1].split(',')[0] = val
+        sl = self._dyn_part[1].split(',')
+        sl[0] = val
+        self._dyn_part[1] = ','.join(sl)
     @nz.setter
     def nz(self, val):
-        self._dyn_part[1].split(',')[1] = val
+        sl = self._dyn_part[1].split(',')
+        sl[1] = val
+        self._dyn_part[1] = ','.join(sl)
     @k.setter
     def k(self, val):
-        self._dyn_part[1].split(',')[2] = val
+        sl = self._dyn_part[1].split(',')
+        sl[2] = val
+        self._dyn_part[2] = ','.join(sl)
+        # self._dyn_part[1].split(',')[2] = val
     @tb.setter
     def tb(self, val):
-        self._dyn_part[1].split(',')[3] = val
+        sl = self._dyn_part[1].split(',')
+        sl[3] = val
+        self._dyn_part[3] = ','.join(sl)
+        # self._dyn_part[1].split(',')[3] = val
     @tt.setter
     def tt(self, val):
-        self._dyn_part[1].split(',')[4] = val
+        sl = self._dyn_part[1].split(',')
+        sl[4] = val
+        self._dyn_part[4] = ','.join(sl)
+        # self._dyn_part[1].split(',')[4] = val
     @pr.setter
     def la(self, val):
-        self._dyn_part[1].split(',')[5] = val
+        sl = self._dyn_part[1].split(',')
+        sl[5] = val
+        self._dyn_part[5] = ','.join(sl)
+        # self._dyn_part[1].split(',')[5] = val
     @pr.setter
     def pr(self, val):
-        self._dyn_part[1].split(',')[6] = val
+        sl = self._dyn_part[1].split(',')
+        sl[6] = val
+        self._dyn_part[6] = ','.join(sl)
+        # self._dyn_part[1].split(',')[6] = val
     @agefnme.setter
     def agefnme(self, val):
         self._dyn_part[-1] = val

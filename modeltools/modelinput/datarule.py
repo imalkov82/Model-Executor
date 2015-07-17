@@ -25,7 +25,7 @@ class StepInput:
             print('generate topography')
             zs_func = StepInput.surfgen_factory(self._row_num, self._col_num, self._esc_ang)
 
-        print('height = {1} velo_angle={0}'.format(self._velo_ang, self._high))
+        print('height = {1} velo_angle={0} esc_angle={2}'.format(self._velo_ang, self._high, self._esc_ang))
         step = zs_func(self._high * numpy.sin(numpy.deg2rad(self._velo_ang)), StepInput.gen_mgsurf)
         print('write topography to file: {0}'.format(save_path))
         numpy.savetxt(save_path, step.flatten(),fmt='%d')
@@ -43,6 +43,7 @@ class StepInput:
         escarpment_angle = esc_angle
         def surf_generator(fw_maxh, f):
             st2 = f(mrow,fylocation,lambda xi,yi: 101 * numpy.tan(numpy.deg2rad(escarpment_angle)) * yi)
+            print('max st2 = {0}'.format(max(st2[int(mrow/2),:])))
             st2 = numpy.concatenate((numpy.zeros(st2.shape),st2),axis=0)
             st2[st2 > fw_maxh] = fw_maxh # footwall maximum height
             return st2
