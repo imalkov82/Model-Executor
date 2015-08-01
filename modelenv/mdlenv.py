@@ -235,7 +235,7 @@ class ModelEnv(EnvNode):
         for _ , s in wrk_data.iterrows():
             super().attach_child_node(SessionEnv(s['execution_directory'], conf_env['escarpment_angle'], conf_env['velo_angle'],
                                             conf_env['canyon_angle'], s['col_num'], s['row_num'], s['grid_type'],
-                                             [s['step{0}'.format(i)]for i in range(int(conf_env['steps_num']))],
+                                             [s['step{0}'.format(i)]for i in range(int(s['steps_num']))],
                                              s['sample'] + 'input/topo_parameters.txt', s['sample'] + 'input/fault_parameters.txt',
                                              conf_env['bin_dir'], conf_env['topo_diff'], conf_env['fault_diff']))
     def __call__(self, *args, **kwargs):
