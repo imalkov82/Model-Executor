@@ -17,7 +17,7 @@ class FaultInput:
             flt_str_indx = gnum + 1 + int(self._fault_str[gnum + 1]) + 1
 
     def save_to_file(self, fpath = ''):
-        ff = [self._faults_num] + [self._fault_coord] + [f.to_str() for f in self._arr]
+        ff = [self._faults_num] + [self._fault_coord] + [str(f) for f in self._arr]
         # ff = [self._faults_num] + [self._fault_coord] + self._fault_str
         with open(fpath, mode='w') as f:
             f.write('\n'.join(ff))
@@ -216,7 +216,7 @@ class Fault:
         s_start = g_end + 1
         s_end = s_start + int(fault_str[g_end])
         self._time_steps = fault_str[s_start: s_end]
-    def to_str(self):
+    def __str__(self):
         res = str(len(self._geometry)) + '\n'
         res+= '\n'.join(self._geometry) + '\n'
         res+= str(len(self._time_steps)) + '\n'
