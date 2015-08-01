@@ -81,6 +81,7 @@ def plot_ea(frame1, filt_df, dst_path, uplift_rate, riv_case):
     plt.yticks(txs, list(reversed(lebs)))
     plt.savefig(dst_path)
     plt.close()
+    return z[0]
 
 # TODO: optimize using pecinputstats.csv
 def define_max_age(df1, tot_len, best_tread, riv_case, oldest_age):
@@ -132,6 +133,7 @@ def uplift_from_file_name(fname):
 
 @say_name
 def plot_age_elevation(src_path, dst_path):
+    ages_to_file = ''
     for dirname, name in ea_finder(src_path):
         ea = os.path.join(dirname, name)
         # root_dir = os.path.split(dirname)[0]
@@ -147,9 +149,12 @@ def plot_age_elevation(src_path, dst_path):
             pic_name = name_dst_file(ea, dst_path, '_esc_ea.png')
             df_res = df_ea_esc(frame1)
         try:
-            plot_ea(frame1, df_res, pic_name, uplift_from_file_name(ea), riv_case)
+            ax = plot_ea(frame1, df_res, pic_name, uplift_from_file_name(ea), riv_case)
+            ages_to_file += ','.join([pic_name,str(ax)]) + '\n'
         except Exception as e:
             print('error in file={0}, error msg = {1}'.format(ea, e))
+    with open(os.path.join(src_path, 'age-elevation_fit.txt'),'a') as file:
+        file.write(ages_to_file)
 
 ############### TEMPERATURE ###################################################
 @say_name
